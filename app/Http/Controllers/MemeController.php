@@ -17,6 +17,14 @@ class MemeController extends Controller
     }
 
     /**
+     * Show the GIF creator page
+     */
+    public function gifCreator()
+    {
+        return view('gif-creator');
+    }
+
+    /**
      * Display a listing of the user's memes.
      */
     public function index()

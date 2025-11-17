@@ -6,6 +6,7 @@ use App\Http\Controllers\MemeController;
 
 Route::get('/', [MemeController::class, 'editor'])->name('home');
 Route::get('/meme-editor', [MemeController::class, 'editor'])->name('meme.editor');
+Route::get('/gif-creator', [MemeController::class, 'gifCreator'])->name('gif.creator');
 
 Route::get('/dashboard', function () {
     return view('dashboard');

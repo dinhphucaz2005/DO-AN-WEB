@@ -12,6 +12,7 @@
         <h1><a href="{{ route('home') }}" style="text-decoration: none; color: inherit;">🎨 Meme Creator</a></h1>
         <nav style="display: flex; gap: 15px; align-items: center;">
           <a href="{{ route('home') }}" style="text-decoration: none; color: #666;">🏠 Trang chủ</a>
+          <a href="{{ route('gif.creator') }}" style="text-decoration: none; color: #666;">🎬 GIF Creator</a>
           @auth
             <a href="{{ route('profile.edit') }}" style="text-decoration: none; color: #666;">{{ Auth::user()->name }}</a>
             <form method="POST" action="{{ route('logout') }}">
