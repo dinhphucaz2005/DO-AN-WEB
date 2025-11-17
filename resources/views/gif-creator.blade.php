@@ -149,6 +149,9 @@
                     <button id="previewBtn" class="btn btn-primary btn-large">▶️ Xem trước</button>
                     <button id="createGifBtn" class="btn btn-success btn-large">✨ Tạo GIF</button>
                     <button id="downloadBtn" class="btn btn-secondary btn-large" style="display:none;">⬇️ Tải về GIF</button>
+                    @auth
+                    <button id="saveGifBtn" class="btn btn-success btn-large" style="display:none;">💾 Lưu GIF</button>
+                    @endauth
                 </div>
 
                 <div id="gifProgress" style="display:none; margin-top: 20px;">
@@ -1072,6 +1075,10 @@ function createGif() {
             previewCanvas.style.display = 'none';
 
             document.getElementById('downloadBtn').style.display = 'inline-block';
+            @auth
+            const saveBtn = document.getElementById('saveGifBtn');
+            if (saveBtn) saveBtn.style.display = 'inline-block';
+            @endauth
 
             alert('✅ GIF đã được tạo thành công! Bạn có thể xem và tải về bên dưới.');
         });
@@ -1127,6 +1134,77 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
     URL.revokeObjectURL(url);
 });
 
+@auth
+// Save GIF
+const saveGifBtn = document.getElementById('saveGifBtn');
+if (saveGifBtn) {
+    saveGifBtn.addEventListener('click', async () => {
+        if (!gifBlob) {
+            alert('⚠️ Chưa có GIF để lưu!');
+            return;
+        }
+
+        const title = prompt('📝 Nhập tiêu đề cho GIF của bạn:');
+        if (!title || title.trim() === '') {
+            return;
+        }
+
+        const description = prompt('📄 Mô tả (tùy chọn):');
+
+        // Convert blob to base64
+        const reader = new FileReader();
+        reader.onloadend = async function() {
+            const base64data = reader.result;
+
+            try {
+                saveGifBtn.disabled = true;
+                saveGifBtn.textContent = '⏳ Đang lưu...';
+
+                const response = await fetch('{{ route('memes.saveImage') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        title: title.trim(),
+                        description: description?.trim() || '',
+                        type: 'gif',
+                        image: base64data,
+                        settings: {
+                            width: parseInt(document.getElementById('gifWidth').value),
+                            height: parseInt(document.getElementById('gifHeight').value),
+                            delay: parseInt(document.getElementById('frameDelay').value),
+                            quality: parseInt(document.getElementById('gifQuality').value),
+                            frameCount: frames.length
+                        }
+                    })
+                });
+
+                const data = await response.json();
+
+                saveGifBtn.disabled = false;
+                saveGifBtn.textContent = '💾 Lưu GIF';
+
+                if (data.success) {
+                    alert('✅ ' + data.message + '\n\nBạn có thể xem GIF đã lưu trong mục "Memes" của mình.');
+                    // Optionally redirect to memes page
+                    // window.location.href = '{{ route('memes.index') }}';
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error saving GIF:', error);
+                saveGifBtn.disabled = false;
+                saveGifBtn.textContent = '💾 Lưu GIF';
+                alert('❌ Lỗi khi lưu GIF: ' + error.message);
+            }
+        };
+        reader.readAsDataURL(gifBlob);
+    });
+}
+@endauth
+
 // Navigation
 document.getElementById('nextBtn').addEventListener('click', () => {
     if (currentStep < 3) {
@@ -1153,6 +1231,10 @@ document.getElementById('resetBtn').addEventListener('click', () => {
         gifResult.style.display = 'none';
         previewCanvas.style.display = 'block';
         document.getElementById('downloadBtn').style.display = 'none';
+        @auth
+        const saveBtn = document.getElementById('saveGifBtn');
+        if (saveBtn) saveBtn.style.display = 'none';
+        @endauth
         document.getElementById('gifProgress').style.display = 'none';
         gifText.value = '';
         textOptions.style.display = 'none';

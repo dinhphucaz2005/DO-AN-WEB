@@ -19,6 +19,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/memes', [MemeController::class, 'index'])->name('memes.index');
     Route::post('/memes', [MemeController::class, 'store'])->name('memes.store');
+    Route::post('/memes/save-image', [MemeController::class, 'saveImage'])->name('memes.saveImage');
+    Route::get('/memes/{id}', [MemeController::class, 'show'])->name('memes.show');
+    Route::delete('/memes/{id}', [MemeController::class, 'destroy'])->name('memes.destroy');
 });
 
 require __DIR__.'/auth.php';

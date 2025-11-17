@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Meme Creator - Tạo Meme Online')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
   </head>
@@ -14,6 +15,7 @@
           <a href="{{ route('home') }}" style="text-decoration: none; color: #666;">🏠 Trang chủ</a>
           <a href="{{ route('gif.creator') }}" style="text-decoration: none; color: #666;">🎬 GIF Creator</a>
           @auth
+            <a href="{{ route('memes.index') }}" style="text-decoration: none; color: #666;">🎨 My Creations</a>
             <a href="{{ route('profile.edit') }}" style="text-decoration: none; color: #666;">{{ Auth::user()->name }}</a>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf

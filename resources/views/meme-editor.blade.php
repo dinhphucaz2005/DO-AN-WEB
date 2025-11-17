@@ -98,8 +98,9 @@
                     <h3>💾 Actions</h3>
                     @auth
                     <div class="save-controls" style="margin-bottom: 15px;">
-                        <input type="text" id="memeTitle" placeholder="Meme Title..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 8px;">
-                        <button id="saveMeme" class="btn btn-primary" style="width: 100%;">💾 Save Meme</button>
+                        <input type="text" id="memeTitle" placeholder="Tiêu đề meme..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 8px;">
+                        <textarea id="memeDescription" placeholder="Mô tả (tùy chọn)..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 8px; resize: vertical; min-height: 60px;"></textarea>
+                        <button id="saveMeme" class="btn btn-primary" style="width: 100%;">💾 Lưu Meme</button>
                     </div>
                     @endauth
                     <div class="action-buttons">
@@ -666,36 +667,84 @@ class MemeEditor {
 
     saveMeme() {
         const title = document.getElementById('memeTitle').value;
-        if (!title) {
-            alert('Please enter a title for your meme.');
+        if (!title || title.trim() === '') {
+            alert('⚠️ Vui lòng nhập tiêu đề cho meme của bạn!');
             return;
         }
 
-        const data = JSON.stringify(this.canvas.toJSON());
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const description = document.getElementById('memeDescription')?.value || '';
 
-        fetch('{{ route("memes.store") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-            },
-            body: JSON.stringify({
-                title: title,
-                data: data,
-            }),
-        })
-        .then(response => {
-            if (response.ok) {
-                window.location.href = '{{ route("memes.index") }}';
-            } else {
-                alert('Failed to save meme. Please try again.');
+        // Show loading state
+        const saveBtn = document.getElementById('saveMeme');
+        const originalText = saveBtn.textContent;
+        saveBtn.disabled = true;
+        saveBtn.textContent = '⏳ Đang lưu...';
+
+        try {
+            // Export canvas as image (PNG with transparent background)
+            const imageDataUrl = this.canvas.toDataURL({
+                format: 'png',
+                quality: 1,
+                multiplier: 1
+            });
+
+            // Get canvas JSON for metadata
+            const canvasData = this.canvas.toJSON();
+
+            // CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            if (!csrfToken) {
+                throw new Error('CSRF token not found');
             }
-        })
-        .catch(error => {
-            console.error('Error saving meme:', error);
-            alert('An error occurred while saving the meme.');
-        });
+
+            // Send to server using new saveImage API
+            fetch('{{ route("memes.saveImage") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                body: JSON.stringify({
+                    title: title.trim(),
+                    type: 'meme',
+                    image: imageDataUrl,
+                    description: description.trim(),
+                    settings: {
+                        width: this.canvas.width,
+                        height: this.canvas.height,
+                        objects: canvasData.objects?.length || 0,
+                        saved_at: new Date().toISOString()
+                    }
+                }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.message || 'Server error');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('✅ ' + data.message + '\n\nĐang chuyển đến gallery...');
+                    window.location.href = '{{ route("memes.index") }}';
+                } else {
+                    throw new Error(data.message || 'Failed to save');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving meme:', error);
+                alert('❌ Lỗi khi lưu meme: ' + error.message);
+                saveBtn.disabled = false;
+                saveBtn.textContent = originalText;
+            });
+        } catch (error) {
+            console.error('Error preparing meme:', error);
+            alert('❌ Lỗi khi chuẩn bị meme: ' + error.message);
+            saveBtn.disabled = false;
+            saveBtn.textContent = originalText;
+        }
     }
 
     updateZoomIndicator() {
