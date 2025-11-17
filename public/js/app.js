@@ -1,12 +1,14 @@
-// public/js/app.js - minimal jQuery interactions for FastFood Delivery
+// public/js/app.js - Meme Creator functionality
 $(document).ready(function() {
-  // simple cart counter
-  var cartCount = 0;
-  $('.add-to-cart').on('click', function(e) {
-    e.preventDefault();
-    cartCount++;
-    $('#cart-count').text(cartCount);
-    // visual feedback
-    $(this).text('Đã thêm').prop('disabled', true).css('opacity', 0.8);
+  // Add any global meme creator functionality here
+  console.log('🎨 Meme Creator loaded!');
+  
+  // Add keyboard shortcuts for meme editor
+  $(document).keydown(function(e) {
+    // Ctrl+S to download meme (if on meme editor page)
+    if (e.ctrlKey && e.which === 83 && $('#downloadMeme').length) {
+      e.preventDefault();
+      $('#downloadMeme').click();
+    }
   });
 });
