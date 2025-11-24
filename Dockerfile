@@ -1,83 +1,54 @@
-# -----------------------------
-# 1) Build Frontend (Node)
-# -----------------------------
-FROM node:20-alpine AS node_builder
+# Stage 1: Build frontend assets
+FROM node:20-alpine as frontend
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci
+COPY package.json package-lock.json ./
+RUN npm install
 COPY . .
 RUN npm run build
 
-# -----------------------------
-# 2) Install Composer deps (PHP)
-# -----------------------------
-FROM composer:2 AS php_builder
+# Stage 2: Setup PHP runtime
+FROM php:8.2-cli
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    sqlite3 \
+    libsqlite3-dev \
+    && docker-php-ext-install pdo_sqlite bcmath gd
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
 WORKDIR /app
+
+# Copy application code
 COPY . .
 
-# Tạm tắt scripts lúc install để cache layer composer
-RUN composer install --no-dev --prefer-dist --no-scripts --optimize-autoloader
-RUN composer run-script post-autoload-dump
+# Copy built assets from frontend stage
+COPY --from=frontend /app/public/build /app/public/build
+COPY --from=frontend /app/public/build/manifest.json /app/public/build/manifest.json
 
-# -----------------------------
-# 3) Final Runtime Image
-# -----------------------------
-FROM php:8.2-fpm-alpine
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader
 
-# Install dependencies for Laravel + Nginx + Supervisor
-RUN apk add --no-cache \
-    nginx \
-    supervisor \
-    sqlite \
-    sqlite-dev \
-    curl \
-    libpng \
-    libpng-dev \
-    libxml2-dev \
-    oniguruma-dev \
-    zip \
-    unzip \
-    gcc \
-    musl-dev \
-    make \
-    autoconf \
-    g++ \
-    bash
+# Create database file
+RUN mkdir -p database && touch database/database.sqlite
 
-# PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql pdo_sqlite mbstring exif bcmath gd
+# Set permissions
+RUN chown -R www-data:www-data /app \
+    && chmod -R 775 /app/storage \
+    && chmod -R 775 /app/bootstrap/cache \
+    && chmod -R 775 /app/database
 
-# Workdir
-WORKDIR /var/www/html
+# Expose port
+EXPOSE 8000
 
-# Copy Laravel code (PHP builder)
-COPY --from=php_builder /app /var/www/html
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Copy built assets (Node builder)
-COPY --from=node_builder /app/public/build /var/www/html/public/build
-
-# Copy database SQLite
-COPY database/database.sqlite /var/www/html/database/database.sqlite
-
-# Copy .env và generate APP_KEY
-COPY .env.example /var/www/html/.env
-RUN php artisan key:generate --force
-
-# Storage, cache, log
-RUN mkdir -p storage bootstrap/cache /var/log/supervisor \
-    && chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 storage bootstrap/cache /var/log/supervisor \
-    && chmod 664 /var/www/html/database/database.sqlite
-
-# Laravel setup
-RUN php artisan storage:link || true
-RUN php artisan config:cache || true
-RUN php artisan route:cache || true
-
-# Nginx + Supervisor configs
-COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
-COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
-COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-EXPOSE 80
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+ENTRYPOINT ["docker-entrypoint.sh"]

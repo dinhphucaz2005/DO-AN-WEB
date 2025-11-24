@@ -8,8 +8,8 @@
         <a href="{{ route('memes.index') }}" class="btn btn-secondary">⬅️ Quay lại</a>
         <h1>{{ $meme->title }}</h1>
         <div class="header-actions">
-            @if($meme->image_path)
-                <a href="{{ Storage::url($meme->image_path) }}" download class="btn btn-primary">⬇️ Tải về</a>
+            @if($meme->image_data)
+                <a href="{{ route('memes.image', $meme->id) }}" download class="btn btn-primary">⬇️ Tải về</a>
             @endif
             <form action="{{ route('memes.destroy', $meme->id) }}" method="POST" style="display: inline;">
                 @csrf
@@ -22,8 +22,8 @@
     <div class="detail-content">
         <div class="main-view">
             <div class="meme-viewer">
-                @if($meme->image_path)
-                    <img src="{{ Storage::url($meme->image_path) }}" alt="{{ $meme->title }}" class="meme-image">
+                @if($meme->image_data)
+                    <img src="{{ route('memes.image', $meme->id) }}" alt="{{ $meme->title }}" class="meme-image">
                 @else
                     <canvas id="memeCanvas" width="800" height="600"></canvas>
                 @endif
@@ -89,8 +89,8 @@
                 <h3>🔗 Chia sẻ</h3>
                 <div class="share-buttons">
                     <button class="btn btn-secondary btn-small" onclick="copyLink()">📋 Copy link</button>
-                    @if($meme->image_path)
-                        <a href="{{ Storage::url($meme->image_path) }}" target="_blank" class="btn btn-secondary btn-small">🔗 Xem trực tiếp</a>
+                    @if($meme->image_data)
+                        <a href="{{ route('memes.image', $meme->id) }}" target="_blank" class="btn btn-secondary btn-small">🔗 Xem trực tiếp</a>
                     @endif
                 </div>
             </div>
@@ -292,7 +292,7 @@
 }
 </style>
 
-@if(!$meme->image_path && $meme->type === 'meme')
+@if(!$meme->image_data && $meme->type === 'meme')
     @push('scripts')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <script>

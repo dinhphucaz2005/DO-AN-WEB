@@ -15,11 +15,40 @@
         </div>
     @endif
 
-    <!-- Filter tabs -->
-    <div class="filter-tabs">
-        <button class="filter-tab active" data-filter="all">Tất cả ({{ $memes->count() }})</button>
-        <button class="filter-tab" data-filter="meme">🖼️ Memes ({{ $memes->where('type', 'meme')->count() }})</button>
-        <button class="filter-tab" data-filter="gif">🎬 GIFs ({{ $memes->where('type', 'gif')->count() }})</button>
+    <!-- Search and Filter Controls -->
+    <div class="controls-container">
+        <form method="GET" action="{{ route('memes.index') }}" class="controls-form">
+            <div class="search-box">
+                <input type="text" name="search" placeholder="🔍 Tìm kiếm theo tên hoặc mô tả..." 
+                       value="{{ request('search') }}" class="search-input">
+            </div>
+            
+            <div class="filters-row">
+                <select name="type" class="filter-select">
+                    <option value="all" {{ request('type') == 'all' ? 'selected' : '' }}>Tất cả loại</option>
+                    <option value="meme" {{ request('type') == 'meme' ? 'selected' : '' }}>🖼️ Meme</option>
+                    <option value="gif" {{ request('type') == 'gif' ? 'selected' : '' }}>🎬 GIF</option>
+                </select>
+                
+                <select name="visibility" class="filter-select">
+                    <option value="all" {{ request('visibility') == 'all' ? 'selected' : '' }}>Tất cả trạng thái</option>
+                    <option value="public" {{ request('visibility') == 'public' ? 'selected' : '' }}>🌍 Công khai</option>
+                    <option value="private" {{ request('visibility') == 'private' ? 'selected' : '' }}>🔒 Riêng tư</option>
+                </select>
+                
+                <select name="sort" class="filter-select">
+                    <option value="date_desc" {{ request('sort') == 'date_desc' ? 'selected' : '' }}>📅 Mới nhất</option>
+                    <option value="date_asc" {{ request('sort') == 'date_asc' ? 'selected' : '' }}>📅 Cũ nhất</option>
+                    <option value="title_asc" {{ request('sort') == 'title_asc' ? 'selected' : '' }}>🔤 Tên A-Z</option>
+                    <option value="title_desc" {{ request('sort') == 'title_desc' ? 'selected' : '' }}>🔤 Tên Z-A</option>
+                </select>
+                
+                <button type="submit" class="btn btn-primary">Áp dụng</button>
+                @if(request()->hasAny(['search', 'type', 'visibility', 'sort']))
+                    <a href="{{ route('memes.index') }}" class="btn btn-secondary">Xóa bộ lọc</a>
+                @endif
+            </div>
+        </form>
     </div>
 
     @if($memes->isEmpty())
@@ -46,8 +75,8 @@
                     </div>
 
                     <div class="item-image">
-                        @if($meme->image_path)
-                            <img src="{{ Storage::url($meme->image_path) }}" alt="{{ $meme->title }}">
+                        @if($meme->image_data)
+                            <img src="{{ route('memes.image', $meme->id) }}" alt="{{ $meme->title }}">
                         @else
                             <canvas id="meme-canvas-{{ $meme->id }}" width="300" height="300"></canvas>
                         @endif
@@ -71,8 +100,14 @@
                         </div>
                         <div class="item-actions">
                             <a href="{{ route('memes.show', $meme->id) }}" class="btn btn-secondary btn-small">👁️ Xem</a>
-                            @if($meme->image_path)
-                                <a href="{{ Storage::url($meme->image_path) }}" download class="btn btn-primary btn-small">⬇️ Tải về</a>
+                            @if(!$meme->is_public)
+                                <form action="{{ route('memes.publish', $meme->id) }}" method="POST" style="display: inline;">
+                                    @csrf
+                                    <button type="submit" class="btn btn-success btn-small">🌍 Đăng</button>
+                                </form>
+                            @endif
+                            @if($meme->image_data)
+                                <a href="{{ route('memes.image', $meme->id) }}" download class="btn btn-primary btn-small">⬇️ Tải về</a>
                             @endif
                         </div>
                     </div>
@@ -145,6 +180,60 @@
     border-color: #007bff;
     background: #007bff;
     color: white;
+}
+
+.controls-container {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.controls-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.search-box {
+    width: 100%;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.filters-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filter-select {
+    padding: 10px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #007bff;
 }
 
 .empty-state {
@@ -330,10 +419,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Load fabric.js memes (old format without image_path)
+    // Load fabric.js memes (old format without image_data)
     const memes = @json($memes);
     memes.forEach(meme => {
-        if (!meme.image_path && meme.type === 'meme') {
+        if (!meme.image_data && meme.type === 'meme') {
             try {
                 const canvas = new fabric.StaticCanvas(`meme-canvas-${meme.id}`);
                 const data = JSON.parse(meme.data);

@@ -37,7 +37,7 @@
                     <i class="upload-icon">🖼️</i>
                     <h3>Kéo thả ảnh vào đây</h3>
                     <p>hoặc</p>
-                    <button class="btn btn-primary" onclick="document.getElementById('gifImageInput').click()">📂 Chọn ảnh từ máy</button>
+                    <button class="btn btn-primary">📂 Chọn ảnh từ máy</button>
                     <p style="font-size: 0.9em; color: #666; margin-top: 15px;">Cần 2-20 ảnh để tạo GIF</p>
                     <input type="file" id="gifImageInput" accept="image/*" multiple hidden>
                 </div>
@@ -749,7 +749,7 @@ function showStep(step) {
 
 // Upload functionality
 uploadArea.addEventListener('click', (e) => {
-    if (e.target.tagName !== 'BUTTON') return;
+    if (e.target === imageInput) return;
     imageInput.click();
 });
 
@@ -871,32 +871,70 @@ function updateFrameCount() {
 let draggedIndex = null;
 
 function handleDragStart(e) {
-    draggedIndex = parseInt(e.target.dataset.index);
-    e.target.style.opacity = '0.5';
+    const target = e.target.closest('.frame-item');
+    if (!target) return;
+    
+    draggedIndex = parseInt(target.dataset.index);
+    target.style.opacity = '0.5';
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', draggedIndex); // Required for Firefox
 }
 
 function handleDragOver(e) {
     e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    
+    const target = e.target.closest('.frame-item');
+    if (target) {
+        target.style.transform = 'scale(1.05)';
+        target.style.borderColor = '#007bff';
+    }
+    return false;
 }
 
-function handleDrop(e) {
-    e.preventDefault();
-    const dropTarget = e.target.closest('.frame-item');
-    if (!dropTarget) return;
-
-    const dropIndex = parseInt(dropTarget.dataset.index);
-
-    if (draggedIndex !== null && draggedIndex !== dropIndex) {
-        const draggedFrame = frames[draggedIndex];
-        frames.splice(draggedIndex, 1);
-        frames.splice(dropIndex, 0, draggedFrame);
-        renderFrames();
+function handleDragLeave(e) {
+    const target = e.target.closest('.frame-item');
+    if (target) {
+        target.style.transform = '';
+        target.style.borderColor = '';
     }
 }
 
+function handleDrop(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    const dropTarget = e.target.closest('.frame-item');
+    if (!dropTarget) return;
+
+    // Reset styles
+    dropTarget.style.transform = '';
+    dropTarget.style.borderColor = '';
+
+    const dropIndex = parseInt(dropTarget.dataset.index);
+
+    if (draggedIndex !== null && draggedIndex !== dropIndex && !isNaN(draggedIndex) && !isNaN(dropIndex)) {
+        // Remove from old position
+        const [draggedFrame] = frames.splice(draggedIndex, 1);
+        // Insert at new position
+        frames.splice(dropIndex, 0, draggedFrame);
+        
+        // Re-render to update UI and indices
+        renderFrames();
+    }
+    return false;
+}
+
 function handleDragEnd(e) {
-    e.target.style.opacity = '1';
+    const target = e.target.closest('.frame-item');
+    if (target) target.style.opacity = '1';
     draggedIndex = null;
+    
+    // Clean up any stuck styles
+    document.querySelectorAll('.frame-item').forEach(el => {
+        el.style.transform = '';
+        el.style.borderColor = '';
+    });
 }
 
 // Size presets

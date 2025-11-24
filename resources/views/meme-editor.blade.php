@@ -585,19 +585,6 @@ class MemeEditor {
         this.canvas.on('selection:created', (e) => this.updateControls(e.target));
         this.canvas.on('selection:updated', (e) => this.updateControls(e.target));
         this.canvas.on('selection:cleared', () => this.updateControls(null));
-
-        // Canvas events for zoom/pan
-        this.canvas.on('mouse:wheel', (opt) => {
-            const delta = opt.e.deltaY;
-            let zoom = this.canvas.getZoom();
-            zoom *= 0.999 ** delta;
-            if (zoom > 20) zoom = 20;
-            if (zoom < 0.01) zoom = 0.01;
-            this.canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
-            this.updateZoomIndicator();
-            opt.e.preventDefault();
-            opt.e.stopPropagation();
-        });
     }
 
     initializeHistoryTracking() {

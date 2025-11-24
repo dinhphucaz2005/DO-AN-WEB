@@ -10,21 +10,57 @@
   <body>
     <div class="container">
       <header class="header">
-        <h1><a href="{{ route('home') }}" style="text-decoration: none; color: inherit;">🎨 Meme Creator</a></h1>
-        <nav style="display: flex; gap: 15px; align-items: center;">
-          <a href="{{ route('home') }}" style="text-decoration: none; color: #666;">🏠 Trang chủ</a>
-          <a href="{{ route('gif.creator') }}" style="text-decoration: none; color: #666;">🎬 GIF Creator</a>
+        <!-- Left side: Title + Navigation -->
+        <div style="display: flex; align-items: center; gap: 30px; flex: 1;">
+          <h1 style="margin: 0;">
+            <a href="{{ route('home') }}" style="text-decoration: none; color: inherit;">
+              🎨 Meme Creator
+            </a>
+          </h1>
+          
+          <nav class="nav-left">
+            <a href="{{ route('home') }}" class="nav-link">
+              <span class="nav-icon">🏠</span>
+              <span class="nav-text">Trang chủ</span>
+            </a>
+            <a href="{{ route('gif.creator') }}" class="nav-link">
+              <span class="nav-icon">🎬</span>
+              <span class="nav-text">GIF Creator</span>
+            </a>
+            <a href="{{ route('memes.public') }}" class="nav-link">
+              <span class="nav-icon">🌍</span>
+              <span class="nav-text">Community Gallery</span>
+            </a>
+          </nav>
+        </div>
+
+        <!-- Right side: Auth buttons -->
+        <nav class="nav-right">
           @auth
-            <a href="{{ route('memes.index') }}" style="text-decoration: none; color: #666;">🎨 My Creations</a>
-            <a href="{{ route('profile.edit') }}" style="text-decoration: none; color: #666;">{{ Auth::user()->name }}</a>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <a href="{{ route('logout') }}" onclick="event.preventDefault(); this.closest('form').submit();" style="text-decoration: none; color: #666;">Log Out</a>
-            </form>
+            <div class="user-menu">
+              <span class="user-name">{{ Auth::user()->name }}</span>
+              <div class="user-dropdown">
+                <a href="{{ route('memes.index') }}" class="dropdown-item">
+                  <span>🎨</span> My Creations
+                </a>
+                <form method="POST" action="{{ route('logout') }}">
+                  @csrf
+                  <button type="submit" class="dropdown-item">
+                    <span>🚪</span> Log Out
+                  </button>
+                </form>
+              </div>
+            </div>
           @else
-            <a href="{{ route('login') }}" style="text-decoration: none; color: #666;">Log in</a>
+            <a href="{{ route('login') }}" class="nav-link nav-link-secondary">
+              <span class="nav-icon">🔑</span>
+              <span class="nav-text">Login</span>
+            </a>
             @if (Route::has('register'))
-              <a href="{{ route('register') }}" style="text-decoration: none; color: #666;">Register</a>
+              <a href="{{ route('register') }}" class="nav-link nav-link-primary">
+                <span class="nav-icon">✨</span>
+                <span class="nav-text">Register</span>
+              </a>
             @endif
           @endauth
         </nav>
@@ -34,8 +70,15 @@
         @yield('content')
       </main>
 
-      <footer style="margin-top:30px; color:#666; font-size:0.9rem;">
-        &copy; {{ date('Y') }} Meme Creator - Tạo meme online miễn phí
+      <footer class="footer">
+        <div style="text-align: center;">
+          <p style="margin: 0; font-weight: 600; color: rgba(255, 255, 255, 0.9);">
+            🎨 Meme Creator
+          </p>
+          <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: rgba(255, 255, 255, 0.7);">
+            &copy; {{ date('Y') }} - Tạo meme online miễn phí
+          </p>
+        </div>
       </footer>
     </div>
 
