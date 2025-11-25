@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="csrf-token" content="ndtjBOwSARxqLDR0IjPhj4fwjiBEuvaOfDhO9Ts9">
+    <title>Meme Creator - Tạo Meme Online Miễn Phí</title>
+    <link rel="preload" as="style" href="http://localhost:8000/build/assets/app-BdpQy2rP.css" /><link rel="modulepreload" as="script" href="http://localhost:8000/build/assets/app-DYmqSHfq.js" /><link rel="stylesheet" href="http://localhost:8000/build/assets/app-BdpQy2rP.css" /><script type="module" src="http://localhost:8000/build/assets/app-DYmqSHfq.js"></script>  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <!-- Left side: Title + Navigation -->
+        <div style="display: flex; align-items: center; gap: 30px; flex: 1;">
+          <h1 style="margin: 0;">
+            <a href="http://localhost:8000" style="text-decoration: none; color: inherit;">
+              🎨 Meme Creator
+            </a>
+          </h1>
+          
+          <nav class="nav-left">
+            <a href="http://localhost:8000/meme-editor" class="nav-link">
+              <span class="nav-icon">🎨</span>
+              <span class="nav-text">Meme Create</span>
+            </a>
+            <a href="http://localhost:8000/gif-creator" class="nav-link">
+              <span class="nav-icon">🎬</span>
+              <span class="nav-text">GIF Creator</span>
+            </a>
+            <a href="http://localhost:8000/memes/gallery" class="nav-link">
+              <span class="nav-icon">📷</span>
+              <span class="nav-text">Meme Gallery</span>
+            </a>
+            <a href="http://localhost:8000/memes/public" class="nav-link">
+              <span class="nav-icon">🌍</span>
+              <span class="nav-text">Meme Community</span>
+            </a>
+          </nav>
+        </div>
+
+        <!-- Right side: Auth buttons -->
+        <nav class="nav-right">
+          <!-- ========== CUSTOM: Nút điều khiển âm thanh (Audio Toggle Button) ==========
+               - Bạn đã thêm nút bật/tắt âm nhạc vào header
+               - Mục đích: Cho phép người dùng bật/tắt âm thanh nền của web
+               - Biểu tượng: 🔊 (đang phát) hoặc 🔈 (đã tắt)
+               - Trạng thái được lưu vào localStorage để nhớ tùy chọn người dùng
+               ====================================================================== -->
+          <div id="audio-control" style="display:flex; align-items:center; gap:10px;">
+            <!-- 
+              * id="audio-toggle": ID để lấy element này trong JavaScript
+              * class="nav-link": Sử dụng style từ CSS để phù hợp với giao diện header
+              * title: Tooltip (chữ hiện khi hover chuột)
+              * style="padding:8px 12px;": Khoảng cách bên trong nút
+              * 🔊: Biểu tượng loa phát âm (sẽ đổi thành 🔈 khi tắt)
+            -->
+            <button id="audio-toggle" class="nav-link" title="Bật/Tắt âm nhạc" style="padding:8px 12px;">🔊</button>
+          </div>
+                      <a href="http://localhost:8000/login" class="nav-link nav-link-secondary">
+              <span class="nav-icon">🔑</span>
+              <span class="nav-text">Login</span>
+            </a>
+                          <a href="http://localhost:8000/register" class="nav-link nav-link-primary">
+                <span class="nav-icon">✨</span>
+                <span class="nav-text">Register</span>
+              </a>
+                              </nav>
+      </header>
+
+      <main>
+        <div class="meme-creator-home" style="--page-type:meme-creator;">
+    <script>document.body.classList.add('meme-creator-page');</script>
+
+    <!-- Quick Action Buttons -->
+    <div class="quick-actions">
+        <a href="http://localhost:8000/meme-editor" class="action-card active" title="Make a meme with our editor">
+            <div class="action-icon">✏️</div>
+            <div class="action-label">Make a meme</div>
+        </a>
+        <a href="http://localhost:8000/gif-creator" class="action-card" title="Create animated GIFs">
+            <div class="action-icon">🎬</div>
+            <div class="action-label">Make a GIF</div>
+        </a>
+        <div class="action-card disabled" title="Coming soon">
+            <div class="action-icon">🤖</div>
+            <div class="action-label">AI Meme</div>
+            <div class="coming-soon">coming soon...</div>
+        </div>
+    </div>
+
+    <!-- My Creations Section -->
+        <div class="section-block">
+        <div class="section-header">
+            <h2>My Creations</h2>
+            <a href="http://localhost:8000/login" class="btn btn-primary">Log In</a>
+        </div>
+    </div>
+    
+    <!-- Top User Templates Section -->
+    <div class="section-block">
+        <div class="section-header">
+            <h2>🎨 Top User Templates</h2>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="template-tabs">
+            <button class="template-tab-btn active" data-tab="meme-templates">📷 Meme</button>
+            <button class="template-tab-btn" data-tab="gif-templates">🎬 Gifs</button>
+        </div>
+
+        <!-- Meme Templates -->
+        <div id="meme-templates" class="templates-container active">
+            <div class="templates-grid">
+                <div class="template-item">
+                    <div class="template-thumb" style="background: linear-gradient(45deg, #FFD700, #FFA500);">👑</div>
+                    <p style="text-align:center; font-size:0.9rem; color:#666; margin-top:8px;">Meme 1</p>
+                </div>
+                <div class="template-item">
+                    <div class="template-thumb" style="background: linear-gradient(45deg, #FFB6C1, #FFC0CB);">💝</div>
+                    <p style="text-align:center; font-size:0.9rem; color:#666; margin-top:8px;">Meme 2</p>
+                </div>
+                <div class="template-item">
+                    <div class="template-thumb" style="background: linear-gradient(45deg, #4169E1, #1E90FF);">🎭</div>
+                    <p style="text-align:center; font-size:0.9rem; color:#666; margin-top:8px;">Meme 3</p>
+                </div>
+                <div class="template-item">
+                    <div class="template-thumb" style="background: linear-gradient(45deg, #9370DB, #BA55D3);">💫</div>
+                    <p style="text-align:center; font-size:0.9rem; color:#666; margin-top:8px;">Meme 4</p>
+                </div>
+                <div class="template-item">
+                    <div class="template-thumb" style="background: linear-gradient(45deg, #FF6347, #FF4500);">🔥</div>
+                    <p style="text-align:center; font-size:0.9rem; color:#666; margin-top:8px;">Meme 5</p>
+                </div>
+                <div class="template-item">
+                    <div class="template-thumb" style="background: linear-gradient(45deg, #20B2AA, #48D1CC);">🌊</div>
+                    <p style="text-align:center; font-size:0.9rem; color:#666; margin-top:8px;">Meme 6</p>
+                </div>
+                <div class="template-item">
+                    <div class="template-thumb" style="background: linear-gradient(45deg, #DAA520, #FFD700);">⚡</div>
+                    <p style="text-align:center; font-size:0.9rem; color:#666; margin-top:8px;">Meme 7</p>
+                </div>
+                <div class="template-item">
+                    <div class="template-thumb" style="background: linear-gradient(45deg, #228B22, #32CD32);">🌿</div>
+                    <p style="text-align:center; font-size:0.9rem; color:#666; margin-top:8px;">Meme 8</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gifs Templates -->
+        <div id="gif-templates" class="templates-container">
+            <div class="templates-grid">
+                <div class="template-item">
+                    <div class="template-thumb" style="background: linear-gradient(45deg, #87CEEB, #E0FFFF);">🎬</div>
+                    <p style="text-align:center; font-size:0.9rem; color:#666; margin-top:8px;">GIF 1</p>
+                </div>
+                <div class="template-item">
+                    <div class="template-thumb" style="background: linear-gradient(45deg, #DC143C, #FF1493);">💖</div>
+                    <p style="text-align:center; font-size:0.9rem; color:#666; margin-top:8px;">GIF 2</p>
+                </div>
+                <div class="template-item">
+                    <div class="template-thumb" style="background: linear-gradient(45deg, #2F4F4F, #696969);">🎪</div>
+                    <p style="text-align:center; font-size:0.9rem; color:#666; margin-top:8px;">GIF 3</p>
+                </div>
+                <div class="template-item">
+                    <div class="template-thumb" style="background: linear-gradient(45deg, #8B4513, #D2691E);">🎨</div>
+                    <p style="text-align:center; font-size:0.9rem; color:#666; margin-top:8px;">GIF 4</p>
+                </div>
+                <div class="template-item">
+                    <div class="template-thumb" style="background: linear-gradient(45deg, #FF69B4, #FF1493);">✨</div>
+                    <p style="text-align:center; font-size:0.9rem; color:#666; margin-top:8px;">GIF 5</p>
+                </div>
+                <div class="template-item">
+                    <div class="template-thumb" style="background: linear-gradient(45deg, #00CED1, #40E0D0);">🌈</div>
+                    <p style="text-align:center; font-size:0.9rem; color:#666; margin-top:8px;">GIF 6</p>
+                </div>
+                <div class="template-item">
+                    <div class="template-thumb" style="background: linear-gradient(45deg, #FFA500, #FF6347);">🎆</div>
+                    <p style="text-align:center; font-size:0.9rem; color:#666; margin-top:8px;">GIF 7</p>
+                </div>
+                <div class="template-item">
+                    <div class="template-thumb" style="background: linear-gradient(45deg, #9932CC, #BA55D3);">🎇</div>
+                    <p style="text-align:center; font-size:0.9rem; color:#666; margin-top:8px;">GIF 8</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Community Gallery Section -->
+    <div class="section-block">
+        <div class="section-header">
+            <h2>🌍 Community Gallery</h2>
+            <a href="http://localhost:8000/memes/public" class="btn btn-small">All</a>
+        </div>
+        <div class="community-placeholder" style="text-align:center; padding:30px; color:#999;">
+            Check out amazing memes created by the community! <a href="http://localhost:8000/memes/public" style="color:#007bff; text-decoration:none;">Visit Community Gallery →</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.meme-creator-home {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Quick Actions */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 30px;
+}
+
+.action-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    background: linear-gradient(135deg, #1f1f3d, #2a2a4e);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: #fff;
+    position: relative;
+    min-height: 120px;
+}
+
+.action-card:hover:not(.disabled) {
+    background: linear-gradient(135deg, #2a2a4e, #3a3a5e);
+    border-color: rgba(255,255,255,0.2);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.action-card.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.action-card.active {
+    background: linear-gradient(135deg, #4caf50, #45a049);
+    border-color: #4caf50;
+}
+
+.action-icon {
+    font-size: 40px;
+    margin-bottom: 8px;
+}
+
+.action-label {
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+.coming-soon {
+    font-size: 11px;
+    color: #ffc107;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* Section Blocks */
+.section-block {
+    margin-bottom: 40px;
+    background: linear-gradient(135deg, #f5f5f5, #fafafa);
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 24px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: #333;
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    background: #007bff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.btn-small:hover {
+    background: #0056b3;
+}
+
+/* Template Tabs */
+.template-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #eee;
+}
+
+.template-tab-btn {
+    padding: 12px 20px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.2s;
+}
+
+.template-tab-btn:hover {
+    color: #333;
+}
+
+.template-tab-btn.active {
+    color: #ff6b35;
+    border-bottom-color: #ff6b35;
+}
+
+.templates-container {
+    display: none;
+}
+
+.templates-container.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Templates Grid */
+.templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+}
+
+.template-item {
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.template-item:hover {
+    transform: scale(1.05);
+}
+
+.template-thumb {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: box-shadow 0.2s;
+}
+
+.template-item:hover .template-thumb {
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+.creations-placeholder,
+.community-placeholder {
+    background: #fff;
+    border: 1px dashed #ddd;
+    border-radius: 8px;
+}
+
+.btn-primary {
+    padding: 8px 16px;
+    background: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+/* Hide audio control on Meme Creator home page */
+body.meme-creator-page #audio-toggle,
+body.meme-creator-page #global-audio-control {
+    display: none !important;
+}
+</style>
+
+<script>
+    // Tab switching for template sections
+    document.querySelectorAll('.template-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabId = btn.getAttribute('data-tab');
+            
+            // Hide all containers
+            document.querySelectorAll('.templates-container').forEach(container => {
+                container.classList.remove('active');
+            });
+            
+            // Remove active state from all tabs
+            document.querySelectorAll('.template-tab-btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            
+            // Show selected container and mark button as active
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        });
+    });
+</script>
+
+      </main>
+
+      <footer class="footer">
+        <div style="text-align: center;">
+          <p style="margin: 0; font-weight: 600; color: rgba(255, 255, 255, 0.9);">
+            🎨 Meme Creator
+          </p>
+          <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: rgba(255, 255, 255, 0.7);">
+            &copy; 2025 - Tạo meme online miễn phí
+          </p>
+        </div>
+      </footer>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJ+Yt6G6j5J9u6b3Zr6YV9vR5lQvYQf5c5g3I=" crossorigin="anonymous"></script>
+    
+    <!-- Global audio volume control (site-wide) -->
+    <style>
+    /* Floating global audio control */
+    #global-audio-control {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 1200;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(0,0,0,0.08);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      padding: 8px;
+      border-radius: 999px;
+      backdrop-filter: blur(4px);
+    }
+    #global-audio-btn {
+      background: transparent;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 6px;
+    }
+    #global-audio-slider-wrapper {
+      width: 140px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #global-audio-slider {
+      width: 120px;
+      appearance: none;
+      height: 6px;
+      border-radius: 6px;
+      background: linear-gradient(90deg,#ff6b35,#f7931e);
+      outline: none;
+      cursor: pointer;
+    }
+    #global-audio-slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: white;
+      border: 2px solid #ff6b35;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+    @media (max-width: 480px) {
+      #global-audio-control { right: 12px; bottom: 12px; padding: 6px; }
+      #global-audio-slider-wrapper { width: 110px; }
+      #global-audio-slider { width: 90px; }
+    }
+    </style>
+
+    <div id="global-audio-control" aria-label="Global audio control" title="Âm lượng" style="display:none;">
+      <button id="global-audio-btn" aria-label="Bật/Tắt âm lượng">🔊</button>
+      <div id="global-audio-slider-wrapper">
+        <input id="global-audio-slider" type="range" min="0" max="100" value="100" aria-label="Âm lượng" />
+      </div>
+    </div>
+
+    <script>
+    (function(){
+      // Global audio control: applies to audio elements with data-audio-control="global"
+      const STORAGE_KEY = 'globalVolumeV1';
+      const btn = document.getElementById('global-audio-btn');
+      const slider = document.getElementById('global-audio-slider');
+      let lastNonZero = 100;
+
+      function getSaved() {
+        try { const v = localStorage.getItem(STORAGE_KEY); return v === null ? 100 : parseInt(v,10); } catch(e) { return 100; }
+      }
+
+      function save(v) { try { localStorage.setItem(STORAGE_KEY, String(v)); } catch(e){} }
+
+      function updateIcon(v){
+        if (!btn) return;
+        if (v <= 0) btn.textContent = '🔇';
+        else if (v < 34) btn.textContent = '🔈';
+        else if (v < 67) btn.textContent = '🔉';
+        else btn.textContent = '🔊';
+      }
+
+      function applyVolumeToAll(v){
+        const value = Math.max(0, Math.min(100, Number(v)))/100;
+        // Find ALL audio elements on page (no attribute needed)
+        const audios = Array.from(document.querySelectorAll('audio'));
+        if (audios.length > 0) {
+          console.log('[GlobalVolume] Found ' + audios.length + ' audio element(s), setting volume to ' + (value*100).toFixed(0) + '%');
+        }
+        audios.forEach((a, i) => {
+          try { 
+            a.volume = value; 
+            a.muted = value === 0;
+            console.log('[GlobalVolume] Audio[' + i + '] volume set to ' + (value*100).toFixed(0) + '%');
+          } catch(e){
+            console.error('[GlobalVolume] Error setting audio[' + i + '] volume:', e);
+          }
+        });
+        // Also attempt to call Howler if present
+        try {
+          if (typeof Howler !== 'undefined' && Howler && typeof Howler.volume === 'function') {
+            Howler.volume(value);
+            console.log('[GlobalVolume] Howler volume set to ' + (value*100).toFixed(0) + '%');
+          }
+        } catch(e){}
+      }
+
+      function init(){
+        if (!slider) return;
+        const saved = getSaved();
+        slider.value = saved;
+        updateIcon(saved);
+        applyVolumeToAll(saved);
+
+        slider.addEventListener('input', (e) => {
+          const v = parseInt(e.target.value,10);
+          if (v > 0) lastNonZero = v;
+          updateIcon(v);
+          applyVolumeToAll(v);
+          save(v);
+        });
+
+        // Toggle mute/unmute on button click
+        btn.addEventListener('click', () => {
+          const cur = parseInt(slider.value,10);
+          if (cur > 0) {
+            slider.value = 0;
+            updateIcon(0);
+            applyVolumeToAll(0);
+            save(0);
+          } else {
+            const restore = lastNonZero || 100;
+            slider.value = restore;
+            updateIcon(restore);
+            applyVolumeToAll(restore);
+            save(restore);
+          }
+        });
+
+        // Keyboard accessibility: arrow keys change value when slider focused
+        slider.addEventListener('keydown', (e) => {
+          const step = e.shiftKey ? 10 : 1;
+          let v = parseInt(slider.value,10);
+          if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { v = Math.max(0, v - step); slider.value = v; slider.dispatchEvent(new Event('input')); e.preventDefault(); }
+          if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { v = Math.min(100, v + step); slider.value = v; slider.dispatchEvent(new Event('input')); e.preventDefault(); }
+          if (e.key === 'Home') { slider.value = 0; slider.dispatchEvent(new Event('input')); e.preventDefault(); }
+          if (e.key === 'End') { slider.value = 100; slider.dispatchEvent(new Event('input')); e.preventDefault(); }
+        });
+
+            // Observe DOM for audio elements added after page load and apply volume
+            const mo = new MutationObserver((mutations) => {
+              mutations.forEach(m => {
+                m.addedNodes && m.addedNodes.forEach(node => {
+                  if (node.tagName && node.tagName.toLowerCase() === 'audio') {
+                    try { 
+                      node.volume = parseInt(slider.value,10)/100; 
+                      node.muted = parseInt(slider.value,10) === 0;
+                      console.log('[GlobalVolume] New audio element detected, volume applied');
+                    } catch(e){}
+                  } else if (node.querySelectorAll) {
+                    const inner = node.querySelectorAll('audio');
+                    inner.forEach(a => { 
+                      try { 
+                        a.volume = parseInt(slider.value,10)/100; 
+                        a.muted = parseInt(slider.value,10) === 0;
+                        console.log('[GlobalVolume] New nested audio element detected, volume applied');
+                      } catch(e){} 
+                    });
+                  }
+                });
+              });
+            });
+            mo.observe(document.body, { childList: true, subtree: true });
+        }
+
+      // Initialize after DOM ready
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    })();
+    </script>
+
+    <script>
+    (function(){
+      // Show/hide the floating control only when header audio toggle is clicked
+      const HEADER_BTN_ID = 'audio-toggle';
+      const VIS_KEY = 'globalVolumeControlVisible';
+      const headerBtn = document.getElementById(HEADER_BTN_ID);
+      const ctrl = document.getElementById('global-audio-control');
+      function setVisible(v){ if (!ctrl) return; ctrl.style.display = v ? 'flex' : 'none'; if (v){ const s = document.getElementById('global-audio-slider'); if (s) s.focus(); }}
+      try {
+        const saved = localStorage.getItem(VIS_KEY);
+        if (saved === '1') setVisible(true); else setVisible(false);
+      } catch(e) {}
+      if (headerBtn) {
+        headerBtn.addEventListener('click', function(){
+          try {
+            const isVisible = ctrl && ctrl.style.display !== 'none';
+            setVisible(!isVisible);
+            localStorage.setItem(VIS_KEY, !isVisible ? '1' : '0');
+          } catch(e) {}
+        });
+      }
+    })();
+    </script>
+  </body>
+</html>
