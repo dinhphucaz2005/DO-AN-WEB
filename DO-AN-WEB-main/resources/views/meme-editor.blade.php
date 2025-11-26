@@ -425,6 +425,18 @@
     box-shadow: 0 4px 8px rgba(23,162,184,0.3);
 }
 
+/* Ensure control panels sit above canvas overlays and receive pointer events */
+.controls, .control-group, .action-buttons {
+    position: relative;
+    z-index: 99999 !important;
+    pointer-events: auto;
+}
+
+/* If there are floating UI elements, keep buttons interactive */
+.action-buttons .btn {
+    pointer-events: auto;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .editor-container {
@@ -481,11 +493,15 @@ class MemeEditor {
         this.uploadArea.addEventListener('dragleave', () => this.uploadArea.classList.remove('dragover'));
         this.uploadArea.addEventListener('drop', (e) => { e.preventDefault(); this.uploadArea.classList.remove('dragover'); this.handleImageDrop(e); });
 
-        // Text controls
-        document.getElementById('addText').addEventListener('click', () => this.addText());
-        document.getElementById('textColor').addEventListener('input', (e) => this.updateActiveObject({ fill: e.target.value }));
-        document.getElementById('strokeColor').addEventListener('input', (e) => this.updateActiveObject({ stroke: e.target.value }));
-        document.getElementById('fontSize').addEventListener('input', (e) => this.updateActiveObject({ fontSize: parseInt(e.target.value, 10) }));
+        // Text controls (guarded)
+        const addTextBtn = document.getElementById('addText');
+        const textColorEl = document.getElementById('textColor');
+        const strokeColorEl = document.getElementById('strokeColor');
+        const fontSizeEl = document.getElementById('fontSize');
+        if (addTextBtn) addTextBtn.addEventListener('click', () => this.addText());
+        if (textColorEl) textColorEl.addEventListener('input', (e) => this.updateActiveObject({ fill: e.target.value }));
+        if (strokeColorEl) strokeColorEl.addEventListener('input', (e) => this.updateActiveObject({ stroke: e.target.value }));
+        if (fontSizeEl) fontSizeEl.addEventListener('input', (e) => this.updateActiveObject({ fontSize: parseInt(e.target.value, 10) }));
 
         // Icon/Sticker catalog
         document.querySelectorAll('.icon-item').forEach(item => {
@@ -503,27 +519,54 @@ class MemeEditor {
         this.userStickerInput.addEventListener('change', (e) => this.handleUserStickersDrop(e.target.files));
 
         // Action Buttons
-        document.getElementById('clearCanvas').addEventListener('click', () => this.clearCanvas());
-        document.getElementById('downloadMeme').addEventListener('click', () => this.downloadMeme());
-        document.getElementById('resetEditor').addEventListener('click', () => this.resetEditor());
-        if (document.getElementById('saveMeme')) {
-            document.getElementById('saveMeme').addEventListener('click', () => this.saveMeme());
+        const clearBtn = document.getElementById('clearCanvas');
+        const downloadBtn = document.getElementById('downloadMeme');
+        const resetEditorBtn = document.getElementById('resetEditor');
+        const saveBtnEl = document.getElementById('saveMeme');
+        if (clearBtn) { clearBtn.style.pointerEvents = 'auto'; clearBtn.addEventListener('click', () => this.clearCanvas()); }
+        if (downloadBtn) { downloadBtn.style.pointerEvents = 'auto'; downloadBtn.addEventListener('click', () => this.downloadMeme()); }
+        if (resetEditorBtn) { resetEditorBtn.style.pointerEvents = 'auto'; resetEditorBtn.addEventListener('click', () => this.resetEditor()); }
+        if (saveBtnEl) { saveBtnEl.style.pointerEvents = 'auto'; saveBtnEl.addEventListener('click', () => this.saveMeme()); }
+
+        // Undo/Redo buttons (guarded)
+        const undoBtnEl = document.getElementById('undoBtn');
+        const redoBtnEl = document.getElementById('redoBtn');
+        if (undoBtnEl) { undoBtnEl.style.pointerEvents = 'auto'; undoBtnEl.addEventListener('click', () => this.undo()); }
+        if (redoBtnEl) { redoBtnEl.style.pointerEvents = 'auto'; redoBtnEl.addEventListener('click', () => this.redo()); }
+
+        // Toggle shortcuts panel (guarded)
+        const toggleShortcutsBtn = document.getElementById('toggleShortcuts');
+        if (toggleShortcutsBtn) {
+            toggleShortcutsBtn.addEventListener('click', () => {
+                const panel = document.getElementById('shortcutsPanel');
+                if (panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            });
         }
 
-        // Undo/Redo buttons
-        document.getElementById('undoBtn').addEventListener('click', () => this.undo());
-        document.getElementById('redoBtn').addEventListener('click', () => this.redo());
+        // Zoom controls (ensure pointer events enabled)
+        const zoomInEl = document.getElementById('zoomIn');
+        const zoomOutEl = document.getElementById('zoomOut');
+        const resetZoomEl = document.getElementById('resetZoom');
+        if (zoomInEl) { zoomInEl.style.pointerEvents = 'auto'; zoomInEl.addEventListener('click', () => this.zoomIn()); }
+        if (zoomOutEl) { zoomOutEl.style.pointerEvents = 'auto'; zoomOutEl.addEventListener('click', () => this.zoomOut()); }
+        if (resetZoomEl) { resetZoomEl.style.pointerEvents = 'auto'; resetZoomEl.addEventListener('click', () => this.resetZoom()); }
 
-        // Toggle shortcuts panel
-        document.getElementById('toggleShortcuts').addEventListener('click', () => {
-            const panel = document.getElementById('shortcutsPanel');
-            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-        });
-
-        // Zoom controls
-        document.getElementById('zoomIn').addEventListener('click', () => this.zoomIn());
-        document.getElementById('zoomOut').addEventListener('click', () => this.zoomOut());
-        document.getElementById('resetZoom').addEventListener('click', () => this.resetZoom());
+        // Fallback delegated listener: if some overlay prevents direct clicks, capture by delegation
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest && e.target.closest('button');
+            if (!btn) return;
+            const id = btn.id;
+            if (!id) return;
+            try {
+                if (id === 'zoomIn') { this.zoomIn(); }
+                else if (id === 'zoomOut') { this.zoomOut(); }
+                else if (id === 'resetZoom') { this.resetZoom(); }
+                else if (id === 'undoBtn') { this.undo(); }
+                else if (id === 'redoBtn') { this.redo(); }
+                else if (id === 'clearCanvas') { this.clearCanvas(); }
+                else if (id === 'downloadMeme') { this.downloadMeme(); }
+            } catch (err) { /* ignore */ }
+        }, { capture: true });
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
@@ -828,30 +871,93 @@ class MemeEditor {
     updateZoomIndicator() {
         const zoomIndicator = document.getElementById('zoomIndicator');
         if (zoomIndicator) {
-            zoomIndicator.textContent = `${Math.round(this.canvas.getZoom() * 100)}%`;
+            const target = this.getTargetImage ? this.getTargetImage() : null;
+            if (target) {
+                const scale = (target.scaleX || 1) * 100;
+                zoomIndicator.textContent = `${Math.round(scale)}%`;
+            } else {
+                zoomIndicator.textContent = `${Math.round((this.canvas.getZoom() || 1) * 100)}%`;
+            }
         }
     }
 
+    // Choose which image object to act on: active, background, or first image
+    getTargetImage() {
+        const active = this.canvas.getActiveObject();
+        if (active && active.type === 'image') return active;
+        if (this.currentBackgroundImage) return this.currentBackgroundImage;
+        return this.canvas.getObjects().find(o => o.type === 'image') || null;
+    }
+
     zoomIn() {
-        let zoom = this.canvas.getZoom();
-        zoom = zoom * 1.1; // Increase zoom by 10%
-        if (zoom > 20) zoom = 20;
-        this.canvas.setZoom(zoom);
+        const target = this.getTargetImage();
+        if (target) {
+            try {
+                const center = target.getCenterPoint();
+                target.set({ originX: 'center', originY: 'center' });
+                const prev = target.scaleX || 1;
+                const next = Math.min(prev * 1.1, 10);
+                target.scale(next);
+                target.setPositionByOrigin(center, 'center', 'center');
+                target.setCoords();
+                this.canvas.requestRenderAll();
+                this.saveHistory();
+            } catch (e) { console.warn('zoomIn image error', e); }
+        } else {
+            let zoom = this.canvas.getZoom() || 1;
+            zoom = zoom * 1.1; // Increase zoom by 10%
+            if (zoom > 20) zoom = 20;
+            this.canvas.setZoom(zoom);
+            this.canvas.requestRenderAll();
+        }
         this.updateZoomIndicator();
     }
 
     zoomOut() {
-        let zoom = this.canvas.getZoom();
-        zoom = zoom / 1.1; // Decrease zoom by 10%
-        if (zoom < 0.01) zoom = 0.01;
-        this.canvas.setZoom(zoom);
+        const target = this.getTargetImage();
+        if (target) {
+            try {
+                const center = target.getCenterPoint();
+                target.set({ originX: 'center', originY: 'center' });
+                const prev = target.scaleX || 1;
+                const next = Math.max(prev / 1.1, 0.05);
+                target.scale(next);
+                target.setPositionByOrigin(center, 'center', 'center');
+                target.setCoords();
+                this.canvas.requestRenderAll();
+                this.saveHistory();
+            } catch (e) { console.warn('zoomOut image error', e); }
+        } else {
+            let zoom = this.canvas.getZoom() || 1;
+            zoom = zoom / 1.1; // Decrease zoom by 10%
+            if (zoom < 0.01) zoom = 0.01;
+            this.canvas.setZoom(zoom);
+            this.canvas.requestRenderAll();
+        }
         this.updateZoomIndicator();
     }
 
     resetZoom() {
-        this.canvas.setZoom(1);
-        this.canvas.viewportTransform = [1, 0, 0, 1, 0, 0]; // Reset pan
-        this.canvas.requestRenderAll();
+        const target = this.getTargetImage();
+        if (target) {
+            try {
+                const center = target.getCenterPoint();
+                target.set({ originX: 'center', originY: 'center' });
+                if (typeof target.originalScale !== 'undefined') {
+                    target.scale(target.originalScale);
+                } else {
+                    target.scale(1);
+                }
+                target.setPositionByOrigin(center, 'center', 'center');
+                target.setCoords();
+                this.canvas.requestRenderAll();
+                this.saveHistory();
+            } catch (e) { console.warn('resetZoom image error', e); }
+        } else {
+            this.canvas.setZoom(1);
+            this.canvas.viewportTransform = [1, 0, 0, 1, 0, 0]; // Reset pan
+            this.canvas.requestRenderAll();
+        }
         this.updateZoomIndicator();
     }
 
@@ -884,47 +990,46 @@ class MemeEditor {
                 const maxHeight = this.canvas.height;
                 let width = htmlImg.width;
                 let height = htmlImg.height;
-                
-                // Scale ảnh để fit trong canvas nhưng giữ tỷ lệ
-                if (width > height) {
-                    if (width > maxWidth) {
-                        height = Math.round(height * maxWidth / width);
-                        width = maxWidth;
-                    }
-                } else {
-                    if (height > maxHeight) {
-                        width = Math.round(width * maxHeight / height);
-                        height = maxHeight;
-                    }
-                }
-                
-                // Tính vị trí để căn giữa ảnh
-                const left = (maxWidth - width) / 2;
-                const top = (maxHeight - height) / 2;
-                
-                // Tạo fabric image
+                // Compute scale to fit the canvas while preserving aspect ratio
+                const scale = Math.min(maxWidth / htmlImg.width, maxHeight / htmlImg.height, 1);
+
+                // center coords
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+
+                // Create fabric image and scale to fit the canvas area
                 fabric.Image.fromURL(imgSrc, (img) => {
+                    // Set center origin so scaling keeps it centered
                     img.set({
-                        left: left,
-                        top: top,
-                        selectable: false,
-                        evented: false,
-                        originX: 'left',
-                        originY: 'top'
+                        left: centerX,
+                        top: centerY,
+                        selectable: true,
+                        evented: true,
+                        originX: 'center',
+                        originY: 'center',
+                        lockMovementX: true,
+                        lockMovementY: true,
+                        lockRotation: true,
+                        hasControls: true
                     });
-                    img.scaleToWidth(width);
-                    
-                    // Thêm ảnh vào canvas
+
+                    // Apply computed scale (use scale rather than scaleToWidth to respect both dimensions)
+                    try { img.scale(scale); } catch(e) { /* fallback */ img.scaleToWidth(Math.round(htmlImg.width * scale)); }
+
+                    // Add to canvas and ensure it's centered
                     this.canvas.add(img);
+                    try { this.canvas.centerObject(img); } catch (e) { }
                     this.canvas.sendToBack(img);
                     this.canvas.renderAll();
                     this.updateCanvasMessage(true);
-                    
-                        // Lưu reference để tránh lỗi random ảnh khác
-                        this.currentBackgroundImage = img;
-                        // Reset input value so subsequent uploads behave predictably
-                        try { if (this.imageInput) this.imageInput.value = ''; } catch(e){}
-                        console.log('Loaded image into canvas', { src: imgSrc, canvasObjects: this.canvas.getObjects().length });
+
+                    // Save reference and original scale for reset
+                    this.currentBackgroundImage = img;
+                    try { img.originalScale = img.scaleX || 1; } catch(e) {}
+
+                    // Reset input value so subsequent uploads behave predictably
+                    try { if (this.imageInput) this.imageInput.value = ''; } catch(e){}
+                    console.log('Loaded image into canvas (fit):', { src: imgSrc, scale: scale, canvasObjects: this.canvas.getObjects().length });
                 }, { crossOrigin: 'Anonymous' });
             };
             htmlImg.onerror = () => {

@@ -14,7 +14,7 @@
         <div style="display: flex; align-items: center; gap: 30px; flex: 1;">
           <h1 style="margin: 0;">
             <a href="{{ route('home') }}" style="text-decoration: none; color: inherit;">
-              🎨 Meme Creator
+              🎨 Sigma
             </a>
           </h1>
           

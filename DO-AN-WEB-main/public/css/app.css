@@ -51,8 +51,42 @@ body {
   transform: translateY(-5px);
 }
 .card img { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; }
-.card h3 { margin: 10px 0 8px; font-size: 1.2rem; color: #333; }
-.card p { margin: 0 0 10px; font-size: 0.9rem; color: #666; }
+.card h3 { margin: 10px 0 8px; font-size: 1.2rem; color: #ffffff !important; }
+
+/* Fallback selectors for different title classes used in templates */
+.post-title, .meme-title, .title { color: #ffffff !important; }
+
+/* Ensure any H3 used as a post title is white (covers current + future posts) */
+article h3,
+.post h3,
+.post-card h3,
+.meme-card h3,
+.card h3,
+.post-list h3,
+.meme-list h3 {
+  color: #ffffff !important;
+}
+
+/* Links inside titles inherit white color */
+.post h3 a,
+.card h3 a,
+.meme-card h3 a {
+  color: inherit !important;
+  text-decoration: none;
+}
+
+/* Specific selectors for gallery items (titles + descriptions) */
+.gallery-item .item-info h3,
+.gallery-item .item-info .description,
+.gallery-item .item-info p {
+  color: #ffffff !important;
+}
+.card p { margin: 0 0 10px; font-size: 0.9rem; color: #ffffff !important; }
+
+/* Description fallback selectors */
+.post-description, .post-desc, .description, .meme-description, .excerpt {
+  color: #ffffff !important;
+}
 .btn { 
   background: linear-gradient(45deg, #ff6b35, #f7931e); 
   color: #fff; 
@@ -67,3 +101,36 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(255, 107, 53, 0.3);
 }
+
+/* Make username text white across all posts (applies immediately without rebuilding assets) */
+.username {
+  color: #ffffff !important;
+}
+
+/* ------------------ Title & Description Sizing Overrides ------------------ */
+/* Increase post title sizes by ~30% and reduce description size by ~10% */
+.card h3,
+article h3,
+.post h3,
+.post-card h3,
+.meme-card h3,
+.post-list h3,
+.meme-list h3,
+.gallery-item .item-info h3 {
+  font-size: 1.56rem !important; /* ~30% increase from 1.2rem */
+  line-height: 1.2 !important;
+}
+
+.card p,
+.post-description,
+.post-desc,
+.description,
+.meme-description,
+.excerpt,
+.gallery-item .item-info .description,
+.gallery-item .item-info p {
+  font-size: 0.81rem !important; /* ~10% reduction from 0.9rem */
+  line-height: 1.4 !important;
+}
+
+/* End sizing overrides */

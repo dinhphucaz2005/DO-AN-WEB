@@ -33,7 +33,11 @@
                     </div>
 
                     <div class="item-image">
-                        <img src="{{ route('memes.image', $meme->id) }}" alt="{{ $meme->title }}">
+                        <div class="card-frame">
+                            <div class="card-frame-inner">
+                                <img src="{{ route('memes.image', $meme->id) }}" alt="{{ $meme->title }}" class="card-img-centered">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="item-info">
@@ -126,6 +130,20 @@
     height: 100%;
     object-fit: cover;
 }
+
+/* Framed card for listing thumbnails (consistent with post view) */
+.card-frame {
+    background: #fff;
+    border: 3px solid #000;
+    padding: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+.card-frame-inner { width: 100%; display:flex; justify-content:center; align-items:center }
+.card-img-centered { max-width: 100%; height: auto; display:block }
 
 .item-info {
     padding: 20px;
