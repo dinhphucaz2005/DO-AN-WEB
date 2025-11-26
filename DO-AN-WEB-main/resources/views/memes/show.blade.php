@@ -25,34 +25,37 @@
 
     <div class="detail-content">
         <div class="main-view">
-            <div class="meme-frame">
-                <div class="meme-frame-inner">
-                    @if($meme->image_data)
-                        <img src="{{ route('memes.image', $meme->id) }}" alt="{{ $meme->title }}" class="meme-image-centered">
-                    @else
-                        <canvas id="memeCanvas" width="800" height="600"></canvas>
-                    @endif
-                </div>
-            </div>
-
-            <div class="post-actions">
-                <div class="actions-row">
-                    <div class="likes">❤️ <span id="likeCount">{{ $meme->likes()->count() }}</span></div>
-                    <div class="action-buttons-right">
+            <!-- meme-container will size to its content (image) so the frame width matches the image width -->
+            <div class="meme-container">
+                <div class="meme-frame">
+                    <div class="meme-frame-inner">
                         @if($meme->image_data)
-                            <a href="{{ route('memes.image', $meme->id) }}" download class="btn btn-info">⬇️</a>
+                            <img src="{{ route('memes.image', $meme->id) }}" alt="{{ $meme->title }}" class="meme-image-centered">
+                        @else
+                            <canvas id="memeCanvas" width="800" height="600"></canvas>
                         @endif
-                        <form action="{{ route('memes.destroy', $meme->id) }}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('Bạn có chắc muốn xóa?')">🗑️</button>
-                        </form>
                     </div>
                 </div>
 
-                <div class="comments-box">
-                    <input type="text" class="comment-input" placeholder="Viết bình luận...">
-                    <button class="btn btn-primary">Bình luận</button>
+                <div class="post-actions">
+                    <div class="actions-row">
+                        <div class="likes">❤️ <span id="likeCount">{{ $meme->likes()->count() }}</span></div>
+                        <div class="action-buttons-right">
+                            @if($meme->image_data)
+                                <a href="{{ route('memes.image', $meme->id) }}" download class="btn btn-info">⬇️</a>
+                            @endif
+                            <form action="{{ route('memes.destroy', $meme->id) }}" method="POST" style="display:inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('Bạn có chắc muốn xóa?')">🗑️</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="comments-box">
+                        <input type="text" class="comment-input" placeholder="Viết bình luận...">
+                        <button class="btn btn-primary">Bình luận</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -174,44 +177,54 @@
     border-radius: 12px;
     padding: 30px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    text-align: center; /* center the inline-block meme container */
 }
 
-/* Framed large white area to match provided design */
+/* Framed area sized to the image: container shrinks to image width */
+.meme-container {
+    display: block;
+    width: 100%; /* make the card frame fill the available width */
+    text-align: center; /* center the inner frame/content */
+    box-sizing: border-box;
+}
+
 .meme-frame {
     background: white;
-    border: 6px solid #000;
+    border: 3px solid rgba(0,0,0,0.12);
     border-radius: 6px;
-    padding: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 520px;
+    padding: 32px;
+    display: block;
+    box-sizing: border-box;
+    min-height: auto;
+    width: 100%; /* ensure frame spans container width */
 }
 
 .meme-frame-inner {
     width: 100%;
-    height: 100%;
-    display:flex;
-    justify-content:center;
-    align-items:center;
+    height: auto;
+    display: block;
+    text-align: center;
 }
 
 .meme-image-centered {
-    max-width: 40%;
+    max-width: 100%; /* image fills available frame width */
     height: auto;
     display:block;
+    margin: 0 auto; /* center image horizontally */
 }
 
 .post-actions {
     margin-top: 18px;
+    display: block;
+    text-align: center;
 }
 
 .actions-row {
-    border: 4px solid #000;
+    border: 2px solid rgba(0,0,0,0.12);
     padding: 12px 16px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+    display: block;
+    width: 100%; /* match the width of .meme-container */
+    box-sizing: border-box;
     background: #fff;
 }
 

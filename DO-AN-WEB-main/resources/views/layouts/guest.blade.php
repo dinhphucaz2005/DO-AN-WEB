@@ -5,12 +5,30 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Meme Creator') }} - Authentication</title>
+        <title>{{ config('app.name', 'Sigma') }} - Authentication</title>
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body>
+        <!-- Site header (same as main layout) -->
+        <header class="header" style="margin: 18px auto; max-width: 1400px;">
+            <div style="display:flex; align-items:center; gap:30px;">
+                <h1 style="margin:0;"><a href="{{ route('home') }}" style="text-decoration:none; color:inherit;">🎨 Sigma</a></h1>
+                <nav class="nav-left">
+                    <a href="{{ route('meme.editor') }}" class="nav-link"><span class="nav-icon">🎨</span><span class="nav-text">Meme Create</span></a>
+                    <a href="{{ route('gif.creator') }}" class="nav-link"><span class="nav-icon">🎬</span><span class="nav-text">GIF Creator</span></a>
+                    <a href="{{ route('memes.public') }}" class="nav-link"><span class="nav-icon">🌍</span><span class="nav-text">Meme Community</span></a>
+                </nav>
+            </div>
+            <nav class="nav-right">
+                <a href="{{ route('login') }}" class="nav-link nav-link-secondary"><span class="nav-icon">🔑</span><span class="nav-text">Login</span></a>
+                @if (Route::has('register'))
+                    <a href="{{ route('register') }}" class="nav-link nav-link-primary"><span class="nav-icon">✨</span><span class="nav-text">Register</span></a>
+                @endif
+            </nav>
+        </header>
+
         <div class="auth-container">
             <!-- Animated Background -->
             <div class="auth-background"></div>
@@ -21,7 +39,7 @@
                 <div class="auth-header">
                     <a href="/" class="auth-logo">
                         <span class="logo-icon">🎨</span>
-                        <span class="logo-text">Meme Creator</span>
+                        <span class="logo-text">Sigma</span>
                     </a>
                     <p class="auth-subtitle">{{ $title ?? 'Welcome back!' }}</p>
                 </div>
@@ -34,7 +52,7 @@
             
             <!-- Footer -->
             <div class="auth-footer">
-                <p>&copy; {{ date('Y') }} Meme Creator. All rights reserved.</p>
+                <p>&copy; {{ date('Y') }} Sigma. All rights reserved.</p>
             </div>
         </div>
 
