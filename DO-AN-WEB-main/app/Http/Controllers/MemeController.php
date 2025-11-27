@@ -315,10 +315,23 @@ class MemeController extends Controller
             abort(404);
         }
 
-        $mime = $meme->mime_type ?? 'image/png';
-        $length = is_string($meme->image_data) ? strlen($meme->image_data) : 0;
+        // Normalize blob data: some DB drivers return a resource/stream for BLOBs
+        $imageData = $meme->image_data;
+        if (is_resource($imageData)) {
+            // read the entire stream into a string
+            $imageData = stream_get_contents($imageData);
+        }
 
-        return response($meme->image_data)
+        // Ensure we have a string for response
+        if (!is_string($imageData)) {
+            // Fallback: try casting
+            $imageData = (string) $imageData;
+        }
+
+        $mime = $meme->mime_type ?? 'image/png';
+        $length = strlen($imageData);
+
+        return response($imageData)
             ->header('Content-Type', $mime)
             ->header('Content-Length', $length)
             ->header('Cache-Control', 'public, max-age=31536000')
