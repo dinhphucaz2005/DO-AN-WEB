@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Meme Creator - Tạo Meme Online')</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="stylesheet" href="https://meme-creator-3-0-0.onrender.com/build/assets/style.css">
+    <script src="https://meme-creator-3-0-0.onrender.com/build/assets/script.js" defer></script>
   </head>
   <body>
     <div class="container">
