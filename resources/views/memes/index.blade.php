@@ -4,9 +4,14 @@
 
 @section('content')
 <div class="memes-gallery">
-    <div class="gallery-header">
-        <h1>🎨 My Creations</h1>
-        <p>Tất cả meme và GIF bạn đã tạo</p>
+    <!-- Rainbow box cho header -->
+    <div class="rainbow-box">
+        <div class="rainbow-inner">
+            <div class="gallery-header">
+                <h1>🎨 My Creations</h1>
+                <p>Tất cả meme và GIF bạn đã tạo</p>
+            </div>
+        </div>
     </div>
 
     @if(session('status'))
@@ -75,11 +80,15 @@
                     </div>
 
                     <div class="item-image">
-                        @if($meme->image_data)
-                            <img src="{{ route('memes.image', $meme->id) }}" alt="{{ $meme->title }}">
-                        @else
-                            <canvas id="meme-canvas-{{ $meme->id }}" width="300" height="300"></canvas>
-                        @endif
+                        <div class="card-frame">
+                            <div class="card-frame-inner">
+                                @if($meme->image_data)
+                                    <img src="{{ route('memes.image', $meme->id) }}" alt="{{ $meme->title }}" class="card-img-centered">
+                                @else
+                                    <canvas id="meme-canvas-{{ $meme->id }}" width="300" height="300"></canvas>
+                                @endif
+                            </div>
+                        </div>
                     </div>
 
                     <div class="item-info">
@@ -318,6 +327,20 @@
     height: 100%;
     object-fit: cover;
 }
+
+/* Framed card for listing thumbnails */
+.card-frame {
+    background: #fff;
+    border: 3px solid #000;
+    padding: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+.card-frame-inner { width: 100%; display:flex; justify-content:center; align-items:center }
+.card-img-centered { max-width: 100%; height: auto; display:block }
 
 .item-image canvas {
     max-width: 100%;

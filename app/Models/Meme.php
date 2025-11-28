@@ -35,4 +35,10 @@ class Meme extends Model
     {
         return $this->likes->contains('user_id', $user->id);
     }
+
+    // Quan hệ với Comment
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
 }

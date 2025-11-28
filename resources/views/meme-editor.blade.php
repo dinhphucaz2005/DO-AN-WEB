@@ -4,27 +4,17 @@
 
 @section('content')
 <div class="meme-editor">
-    <!-- Header with shortcuts hint -->
-    <div class="editor-header">
-        <div>
-            <h1>🎨 Meme Creator</h1>
+    <!-- Header -->
+    <div class="rainbow-box">
+            <div class="rainbow-inner">
+            <h1>✏️ Create Meme</h1>
             <p>Tạo meme hài hước từ ảnh của bạn! Upload ảnh, thêm text và emoji để tạo ra những meme viral.</p>
-        </div>
-        <button id="toggleShortcuts" class="btn btn-info">⌨️ Phím tắt</button>
-    </div>
-
-    <!-- Shortcuts Panel (hidden by default) -->
-    <div id="shortcutsPanel" class="shortcuts-panel" style="display:none;">
-        <h3>⌨️ Phím tắt</h3>
-        <div class="shortcuts-grid">
-            <div class="shortcut-item"><kbd>Ctrl+Z</kbd> <span>Hoàn tác (Undo)</span></div>
-            <div class="shortcut-item"><kbd>Ctrl+Y</kbd> hoặc <kbd>Ctrl+Shift+Z</kbd> <span>Làm lại (Redo)</span></div>
-            <div class="shortcut-item"><kbd>Delete</kbd> / <kbd>Backspace</kbd> <span>Xóa đối tượng</span></div>
-            <div class="shortcut-item"><kbd>Ctrl+Wheel</kbd> <span>Phóng to/thu nhỏ</span></div>
-            <div class="shortcut-item"><kbd>+</kbd> / <kbd>-</kbd> <span>Zoom</span></div>
-            <div class="shortcut-item"><kbd>←</kbd> / <kbd>→</kbd> <span>Xoay</span></div>
-            <div class="shortcut-item"><kbd>↑</kbd> / <kbd>↓</kbd> <span>Kích thước</span></div>
-        </div>
+            @auth
+            <div style="margin-top:12px;">
+                <input type="text" id="memeTitle" placeholder="Tiêu đề meme..." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
+            </div>
+            @endauth
+            </div>
     </div>
 
     <div class="editor-container">
@@ -98,7 +88,6 @@
                     <h3>💾 Actions</h3>
                     @auth
                     <div class="save-controls" style="margin-bottom: 15px;">
-                        <input type="text" id="memeTitle" placeholder="Tiêu đề meme..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 8px;">
                         <textarea id="memeDescription" placeholder="Mô tả (tùy chọn)..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 8px; resize: vertical; min-height: 60px;"></textarea>
                         <button id="saveMeme" class="btn btn-primary" style="width: 100%;">💾 Lưu Meme</button>
                     </div>
@@ -164,6 +153,7 @@
     padding: 20px;
     margin-bottom: 20px;
     animation: slideDown 0.3s ease;
+    display: none !important;
 }
 
 @keyframes slideDown {
@@ -205,16 +195,10 @@
     color: #666;
 }
 
-.meme-editor h1 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 10px;
-}
-
-.meme-editor > p {
-    text-align: center;
-    color: #666;
-    margin-bottom: 30px;
+.meme-editor {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
 }
 
 .editor-container {
@@ -441,6 +425,18 @@
     box-shadow: 0 4px 8px rgba(23,162,184,0.3);
 }
 
+/* Ensure control panels sit above canvas overlays and receive pointer events */
+.controls, .control-group, .action-buttons {
+    position: relative;
+    z-index: 99999 !important;
+    pointer-events: auto;
+}
+
+/* If there are floating UI elements, keep buttons interactive */
+.action-buttons .btn {
+    pointer-events: auto;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .editor-container {
@@ -497,11 +493,15 @@ class MemeEditor {
         this.uploadArea.addEventListener('dragleave', () => this.uploadArea.classList.remove('dragover'));
         this.uploadArea.addEventListener('drop', (e) => { e.preventDefault(); this.uploadArea.classList.remove('dragover'); this.handleImageDrop(e); });
 
-        // Text controls
-        document.getElementById('addText').addEventListener('click', () => this.addText());
-        document.getElementById('textColor').addEventListener('input', (e) => this.updateActiveObject({ fill: e.target.value }));
-        document.getElementById('strokeColor').addEventListener('input', (e) => this.updateActiveObject({ stroke: e.target.value }));
-        document.getElementById('fontSize').addEventListener('input', (e) => this.updateActiveObject({ fontSize: parseInt(e.target.value, 10) }));
+        // Text controls (guarded)
+        const addTextBtn = document.getElementById('addText');
+        const textColorEl = document.getElementById('textColor');
+        const strokeColorEl = document.getElementById('strokeColor');
+        const fontSizeEl = document.getElementById('fontSize');
+        if (addTextBtn) addTextBtn.addEventListener('click', () => this.addText());
+        if (textColorEl) textColorEl.addEventListener('input', (e) => this.updateActiveObject({ fill: e.target.value }));
+        if (strokeColorEl) strokeColorEl.addEventListener('input', (e) => this.updateActiveObject({ stroke: e.target.value }));
+        if (fontSizeEl) fontSizeEl.addEventListener('input', (e) => this.updateActiveObject({ fontSize: parseInt(e.target.value, 10) }));
 
         // Icon/Sticker catalog
         document.querySelectorAll('.icon-item').forEach(item => {
@@ -519,27 +519,54 @@ class MemeEditor {
         this.userStickerInput.addEventListener('change', (e) => this.handleUserStickersDrop(e.target.files));
 
         // Action Buttons
-        document.getElementById('clearCanvas').addEventListener('click', () => this.clearCanvas());
-        document.getElementById('downloadMeme').addEventListener('click', () => this.downloadMeme());
-        document.getElementById('resetEditor').addEventListener('click', () => this.resetEditor());
-        if (document.getElementById('saveMeme')) {
-            document.getElementById('saveMeme').addEventListener('click', () => this.saveMeme());
+        const clearBtn = document.getElementById('clearCanvas');
+        const downloadBtn = document.getElementById('downloadMeme');
+        const resetEditorBtn = document.getElementById('resetEditor');
+        const saveBtnEl = document.getElementById('saveMeme');
+        if (clearBtn) { clearBtn.style.pointerEvents = 'auto'; clearBtn.addEventListener('click', () => this.clearCanvas()); }
+        if (downloadBtn) { downloadBtn.style.pointerEvents = 'auto'; downloadBtn.addEventListener('click', () => this.downloadMeme()); }
+        if (resetEditorBtn) { resetEditorBtn.style.pointerEvents = 'auto'; resetEditorBtn.addEventListener('click', () => this.resetEditor()); }
+        if (saveBtnEl) { saveBtnEl.style.pointerEvents = 'auto'; saveBtnEl.addEventListener('click', () => this.saveMeme()); }
+
+        // Undo/Redo buttons (guarded)
+        const undoBtnEl = document.getElementById('undoBtn');
+        const redoBtnEl = document.getElementById('redoBtn');
+        if (undoBtnEl) { undoBtnEl.style.pointerEvents = 'auto'; undoBtnEl.addEventListener('click', () => this.undo()); }
+        if (redoBtnEl) { redoBtnEl.style.pointerEvents = 'auto'; redoBtnEl.addEventListener('click', () => this.redo()); }
+
+        // Toggle shortcuts panel (guarded)
+        const toggleShortcutsBtn = document.getElementById('toggleShortcuts');
+        if (toggleShortcutsBtn) {
+            toggleShortcutsBtn.addEventListener('click', () => {
+                const panel = document.getElementById('shortcutsPanel');
+                if (panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            });
         }
 
-        // Undo/Redo buttons
-        document.getElementById('undoBtn').addEventListener('click', () => this.undo());
-        document.getElementById('redoBtn').addEventListener('click', () => this.redo());
+        // Zoom controls (ensure pointer events enabled)
+        const zoomInEl = document.getElementById('zoomIn');
+        const zoomOutEl = document.getElementById('zoomOut');
+        const resetZoomEl = document.getElementById('resetZoom');
+        if (zoomInEl) { zoomInEl.style.pointerEvents = 'auto'; zoomInEl.addEventListener('click', () => this.zoomIn()); }
+        if (zoomOutEl) { zoomOutEl.style.pointerEvents = 'auto'; zoomOutEl.addEventListener('click', () => this.zoomOut()); }
+        if (resetZoomEl) { resetZoomEl.style.pointerEvents = 'auto'; resetZoomEl.addEventListener('click', () => this.resetZoom()); }
 
-        // Toggle shortcuts panel
-        document.getElementById('toggleShortcuts').addEventListener('click', () => {
-            const panel = document.getElementById('shortcutsPanel');
-            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-        });
-
-        // Zoom controls
-        document.getElementById('zoomIn').addEventListener('click', () => this.zoomIn());
-        document.getElementById('zoomOut').addEventListener('click', () => this.zoomOut());
-        document.getElementById('resetZoom').addEventListener('click', () => this.resetZoom());
+        // Fallback delegated listener: if some overlay prevents direct clicks, capture by delegation
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest && e.target.closest('button');
+            if (!btn) return;
+            const id = btn.id;
+            if (!id) return;
+            try {
+                if (id === 'zoomIn') { this.zoomIn(); }
+                else if (id === 'zoomOut') { this.zoomOut(); }
+                else if (id === 'resetZoom') { this.resetZoom(); }
+                else if (id === 'undoBtn') { this.undo(); }
+                else if (id === 'redoBtn') { this.redo(); }
+                else if (id === 'clearCanvas') { this.clearCanvas(); }
+                else if (id === 'downloadMeme') { this.downloadMeme(); }
+            } catch (err) { /* ignore */ }
+        }, { capture: true });
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
@@ -652,7 +679,7 @@ class MemeEditor {
         }
     }
 
-    saveMeme() {
+    async saveMeme() {
         const title = document.getElementById('memeTitle').value;
         if (!title || title.trim() === '') {
             alert('⚠️ Vui lòng nhập tiêu đề cho meme của bạn!');
@@ -668,15 +695,31 @@ class MemeEditor {
         saveBtn.textContent = '⏳ Đang lưu...';
 
         try {
-            // Export canvas as image (PNG with transparent background)
-            const imageDataUrl = this.canvas.toDataURL({
-                format: 'png',
-                quality: 1,
-                multiplier: 1
-            });
+            // Ensure all image elements are loaded and canvas is fully rendered before export
+            await this.ensureAllImagesLoaded();
+
+            // Export canvas to data URL while preserving user's zoom/viewport
+            const imageDataUrl = await this.exportCanvasToDataURL(2);
+
+            // Convert dataURL to Blob
+            function dataURLtoBlob(dataurl) {
+                var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1], bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+                while(n--){
+                    u8arr[n] = bstr.charCodeAt(n);
+                }
+                return new Blob([u8arr], {type:mime});
+            }
+            const imageBlob = dataURLtoBlob(imageDataUrl);
 
             // Get canvas JSON for metadata
             const canvasData = this.canvas.toJSON();
+
+            // Debug: log basic info about canvas and exported image
+            try {
+                console.log('Saving meme:', { title: title.trim(), canvasObjects: canvasData.objects?.length || 0 });
+                console.log('Exported image data length:', imageDataUrl.length);
+                console.log('Exported image prefix:', imageDataUrl.slice(0, 64));
+            } catch (e) { console.warn('Debug log failed', e); }
 
             // CSRF token
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -684,25 +727,26 @@ class MemeEditor {
                 throw new Error('CSRF token not found');
             }
 
-            // Send to server using new saveImage API
+            // Send to server using FormData for image upload
+            const formData = new FormData();
+            formData.append('title', title.trim());
+            formData.append('type', 'meme');
+            formData.append('image_file', imageBlob, 'meme.png');
+            formData.append('canvas_json', JSON.stringify(canvasData));
+            formData.append('description', description.trim());
+            formData.append('settings', JSON.stringify({
+                width: this.canvas.width,
+                height: this.canvas.height,
+                objects: canvasData.objects?.length || 0,
+                saved_at: new Date().toISOString()
+            }));
+
             fetch('{{ route("memes.saveImage") }}', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
                 },
-                body: JSON.stringify({
-                    title: title.trim(),
-                    type: 'meme',
-                    image: imageDataUrl,
-                    description: description.trim(),
-                    settings: {
-                        width: this.canvas.width,
-                        height: this.canvas.height,
-                        objects: canvasData.objects?.length || 0,
-                        saved_at: new Date().toISOString()
-                    }
-                }),
+                body: formData,
             })
             .then(response => {
                 if (!response.ok) {
@@ -734,33 +778,186 @@ class MemeEditor {
         }
     }
 
+    // Wait for all image objects on the canvas to finish loading (or until timeout)
+    ensureAllImagesLoaded(timeout = 3000) {
+        return new Promise((resolve) => {
+            const images = this.canvas.getObjects().filter(o => o.type === 'image');
+            // Also include canvas.backgroundImage if present
+            if (this.canvas.backgroundImage) {
+                images.push(this.canvas.backgroundImage);
+            }
+            if (!images || images.length === 0) return resolve();
+
+            let remaining = images.length;
+            const finish = () => {
+                remaining--;
+                if (remaining <= 0) resolve();
+            };
+
+            images.forEach(img => {
+                try {
+                    const el = (img.getElement && img.getElement()) || img._element || img.element || null;
+                    if (!el) return finish();
+                    if (el.complete && el.naturalWidth && el.naturalWidth > 0) {
+                        return finish();
+                    }
+                    // Add listeners to detect when image finishes loading
+                    const onLoad = () => { el.removeEventListener('load', onLoad); el.removeEventListener('error', onErr); finish(); };
+                    const onErr = () => { el.removeEventListener('load', onLoad); el.removeEventListener('error', onErr); finish(); };
+                    el.addEventListener('load', onLoad);
+                    el.addEventListener('error', onErr);
+                } catch (e) {
+                    // If any error, count it as finished to avoid blocking
+                    finish();
+                }
+            });
+
+            // Safety timeout
+            setTimeout(resolve, timeout);
+        });
+    }
+
+    // Export canvas to data URL safely by temporarily resetting zoom/viewport and restoring it
+    exportCanvasToDataURL(multiplier = 1) {
+        return new Promise((resolve) => {
+            try {
+                // Save current transform/zoom
+                const prevZoom = this.canvas.getZoom();
+                const prevViewport = this.canvas.viewportTransform ? this.canvas.viewportTransform.slice() : [1,0,0,1,0,0];
+
+                // Reset zoom/viewport so export captures full canvas as seen
+                this.canvas.setZoom(1);
+                this.canvas.viewportTransform = [1,0,0,1,0,0];
+                this.canvas.discardActiveObject();
+                this.canvas.requestRenderAll();
+
+                // Use toDataURL with explicit width/height to avoid viewport issues
+                const options = {
+                    format: 'png',
+                    quality: 1,
+                    multiplier: multiplier,
+                    left: 0,
+                    top: 0,
+                    width: this.canvas.width,
+                    height: this.canvas.height,
+                };
+
+                // Small timeout to ensure render completed
+                setTimeout(() => {
+                    try {
+                        const dataUrl = this.canvas.toDataURL(options);
+
+                        // Restore zoom/viewport
+                        this.canvas.setZoom(prevZoom);
+                        this.canvas.viewportTransform = prevViewport;
+                        this.canvas.requestRenderAll();
+
+                        resolve(dataUrl);
+                    } catch (err) {
+                        // Restore even on error
+                        this.canvas.setZoom(prevZoom);
+                        this.canvas.viewportTransform = prevViewport;
+                        this.canvas.requestRenderAll();
+                        resolve(null);
+                    }
+                }, 50);
+            } catch (e) {
+                try { this.canvas.requestRenderAll(); } catch(_){}
+                resolve(null);
+            }
+        });
+    }
+
     updateZoomIndicator() {
         const zoomIndicator = document.getElementById('zoomIndicator');
         if (zoomIndicator) {
-            zoomIndicator.textContent = `${Math.round(this.canvas.getZoom() * 100)}%`;
+            const target = this.getTargetImage ? this.getTargetImage() : null;
+            if (target) {
+                const scale = (target.scaleX || 1) * 100;
+                zoomIndicator.textContent = `${Math.round(scale)}%`;
+            } else {
+                zoomIndicator.textContent = `${Math.round((this.canvas.getZoom() || 1) * 100)}%`;
+            }
         }
     }
 
+    // Choose which image object to act on: active, background, or first image
+    getTargetImage() {
+        const active = this.canvas.getActiveObject();
+        if (active && active.type === 'image') return active;
+        if (this.currentBackgroundImage) return this.currentBackgroundImage;
+        return this.canvas.getObjects().find(o => o.type === 'image') || null;
+    }
+
     zoomIn() {
-        let zoom = this.canvas.getZoom();
-        zoom = zoom * 1.1; // Increase zoom by 10%
-        if (zoom > 20) zoom = 20;
-        this.canvas.setZoom(zoom);
+        const target = this.getTargetImage();
+        if (target) {
+            try {
+                const center = target.getCenterPoint();
+                target.set({ originX: 'center', originY: 'center' });
+                const prev = target.scaleX || 1;
+                const next = Math.min(prev * 1.1, 10);
+                target.scale(next);
+                target.setPositionByOrigin(center, 'center', 'center');
+                target.setCoords();
+                this.canvas.requestRenderAll();
+                this.saveHistory();
+            } catch (e) { console.warn('zoomIn image error', e); }
+        } else {
+            let zoom = this.canvas.getZoom() || 1;
+            zoom = zoom * 1.1; // Increase zoom by 10%
+            if (zoom > 20) zoom = 20;
+            this.canvas.setZoom(zoom);
+            this.canvas.requestRenderAll();
+        }
         this.updateZoomIndicator();
     }
 
     zoomOut() {
-        let zoom = this.canvas.getZoom();
-        zoom = zoom / 1.1; // Decrease zoom by 10%
-        if (zoom < 0.01) zoom = 0.01;
-        this.canvas.setZoom(zoom);
+        const target = this.getTargetImage();
+        if (target) {
+            try {
+                const center = target.getCenterPoint();
+                target.set({ originX: 'center', originY: 'center' });
+                const prev = target.scaleX || 1;
+                const next = Math.max(prev / 1.1, 0.05);
+                target.scale(next);
+                target.setPositionByOrigin(center, 'center', 'center');
+                target.setCoords();
+                this.canvas.requestRenderAll();
+                this.saveHistory();
+            } catch (e) { console.warn('zoomOut image error', e); }
+        } else {
+            let zoom = this.canvas.getZoom() || 1;
+            zoom = zoom / 1.1; // Decrease zoom by 10%
+            if (zoom < 0.01) zoom = 0.01;
+            this.canvas.setZoom(zoom);
+            this.canvas.requestRenderAll();
+        }
         this.updateZoomIndicator();
     }
 
     resetZoom() {
-        this.canvas.setZoom(1);
-        this.canvas.viewportTransform = [1, 0, 0, 1, 0, 0]; // Reset pan
-        this.canvas.requestRenderAll();
+        const target = this.getTargetImage();
+        if (target) {
+            try {
+                const center = target.getCenterPoint();
+                target.set({ originX: 'center', originY: 'center' });
+                if (typeof target.originalScale !== 'undefined') {
+                    target.scale(target.originalScale);
+                } else {
+                    target.scale(1);
+                }
+                target.setPositionByOrigin(center, 'center', 'center');
+                target.setCoords();
+                this.canvas.requestRenderAll();
+                this.saveHistory();
+            } catch (e) { console.warn('resetZoom image error', e); }
+        } else {
+            this.canvas.setZoom(1);
+            this.canvas.viewportTransform = [1, 0, 0, 1, 0, 0]; // Reset pan
+            this.canvas.requestRenderAll();
+        }
         this.updateZoomIndicator();
     }
 
@@ -780,13 +977,65 @@ class MemeEditor {
         if (!file.type.startsWith('image/')) { alert('Vui lòng chọn file ảnh hợp lệ!'); return; }
         const reader = new FileReader();
         reader.onload = (e) => {
-            fabric.Image.fromURL(e.target.result, (img) => {
-                this.canvas.setBackgroundImage(img, this.canvas.renderAll.bind(this.canvas), {
-                    scaleX: this.canvas.width / img.width,
-                    scaleY: this.canvas.height / img.height
-                });
-                this.updateCanvasMessage(true);
-            });
+            // Tạo image element từ data URL
+            const imgSrc = e.target.result;
+            const htmlImg = new Image();
+            htmlImg.onload = () => {
+                // Xóa hoàn toàn canvas và tất cả objects cũ
+                this.canvas.clear();
+                this.canvas.backgroundColor = 'white';
+                
+                // Tính toán scale để ảnh vừa canvas và giữ tỷ lệ
+                const maxWidth = this.canvas.width;
+                const maxHeight = this.canvas.height;
+                let width = htmlImg.width;
+                let height = htmlImg.height;
+                // Compute scale to fit the canvas while preserving aspect ratio
+                const scale = Math.min(maxWidth / htmlImg.width, maxHeight / htmlImg.height, 1);
+
+                // center coords
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+
+                // Create fabric image and scale to fit the canvas area
+                fabric.Image.fromURL(imgSrc, (img) => {
+                    // Set center origin so scaling keeps it centered
+                    img.set({
+                        left: centerX,
+                        top: centerY,
+                        selectable: true,
+                        evented: true,
+                        originX: 'center',
+                        originY: 'center',
+                        lockMovementX: true,
+                        lockMovementY: true,
+                        lockRotation: true,
+                        hasControls: true
+                    });
+
+                    // Apply computed scale (use scale rather than scaleToWidth to respect both dimensions)
+                    try { img.scale(scale); } catch(e) { /* fallback */ img.scaleToWidth(Math.round(htmlImg.width * scale)); }
+
+                    // Add to canvas and ensure it's centered
+                    this.canvas.add(img);
+                    try { this.canvas.centerObject(img); } catch (e) { }
+                    this.canvas.sendToBack(img);
+                    this.canvas.renderAll();
+                    this.updateCanvasMessage(true);
+
+                    // Save reference and original scale for reset
+                    this.currentBackgroundImage = img;
+                    try { img.originalScale = img.scaleX || 1; } catch(e) {}
+
+                    // Reset input value so subsequent uploads behave predictably
+                    try { if (this.imageInput) this.imageInput.value = ''; } catch(e){}
+                    console.log('Loaded image into canvas (fit):', { src: imgSrc, scale: scale, canvasObjects: this.canvas.getObjects().length });
+                }, { crossOrigin: 'Anonymous' });
+            };
+            htmlImg.onerror = () => {
+                alert('❌ Lỗi khi tải ảnh!');
+            };
+            htmlImg.src = imgSrc;
         };
         reader.readAsDataURL(file);
     }
@@ -825,7 +1074,7 @@ class MemeEditor {
                     img.set({ left: 100, top: 100 });
                     this.canvas.add(img);
                     this.canvas.setActiveObject(img);
-                });
+                }, { crossOrigin: 'Anonymous' });
             };
             reader.readAsDataURL(file);
         });
@@ -879,10 +1128,22 @@ class MemeEditor {
         this.canvas.renderAll();
     }
 
-    downloadMeme() {
+    async downloadMeme() {
+        // Ensure all images are loaded before export
+        await this.ensureAllImagesLoaded();
+        // Ensure canvas is fully rendered before export
+        this.canvas.renderAll();
+
+        // Export canvas as image PNG (full content including background and text)
+        const imageDataUrl = this.canvas.toDataURL({
+            format: 'png',
+            quality: 1,
+            multiplier: 2 // High quality export
+        });
+
         const link = document.createElement('a');
         link.download = `meme-${Date.now()}.png`;
-        link.href = this.canvas.toDataURL({ format: 'png' });
+        link.href = imageDataUrl;
         link.click();
     }
 
@@ -902,6 +1163,46 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Error: Could not load the editor library. Please refresh the page.');
         }
     }, 500); // Wait 500ms for the CDN script to load.
+});
+</script>
+
+
+<script>
+// Tự động load template nếu có from_template=1 và localStorage chứa ảnh template
+document.addEventListener('DOMContentLoaded', function() {
+    function getQueryParam(name) {
+        const url = new URL(window.location.href);
+        return url.searchParams.get(name);
+    }
+    if (getQueryParam('from_template') === '1') {
+        var imgData = localStorage.getItem('selected_template_image');
+        if (imgData) {
+            var trySet = function() {
+                if (window.memeEditor && window.memeEditor.canvas) {
+                    window.memeEditor.clearCanvas();
+                    fabric.Image.fromURL(imgData, function(img) {
+                        img.set({
+                            left: window.memeEditor.canvas.width/2,
+                            top: window.memeEditor.canvas.height/2,
+                            originX: 'center',
+                            originY: 'center',
+                            selectable: true
+                        });
+                        window.memeEditor.canvas.add(img);
+                        window.memeEditor.canvas.renderAll();
+                    }, { crossOrigin: 'Anonymous' });
+                } else {
+                    setTimeout(trySet, 200);
+                }
+            };
+            trySet();
+            // Xóa sau khi dùng để tránh lặp lại
+            setTimeout(function(){
+                localStorage.removeItem('selected_template_image');
+                localStorage.removeItem('selected_template_title');
+            }, 2000);
+        }
+    }
 });
 </script>
 

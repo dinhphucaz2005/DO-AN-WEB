@@ -12,7 +12,15 @@ use Illuminate\Support\Str;
 class MemeController extends Controller
 {
     /**
-     * Show the meme editor page
+     * Show the meme creator home page (with all sections)
+     */
+    public function home()
+    {
+        return view('meme-creator-home');
+    }
+
+    /**
+     * Show the meme editor page (just the editor, no sections)
      */
     public function editor()
     {
@@ -114,6 +122,29 @@ class MemeController extends Controller
     }
 
     /**
+     * Return the authenticated user's creations as JSON (for picker UI).
+     */
+    public function myJson()
+    {
+        if (!Auth::check()) {
+            return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+        }
+
+        $memes = Meme::where('user_id', Auth::id())->latest()->get()->map(function ($m) {
+            return [
+                'id' => $m->id,
+                'title' => $m->title,
+                'type' => $m->type,
+                'is_public' => (bool)$m->is_public,
+                'url' => route('memes.image', $m->id),
+                'created_at' => $m->created_at->toDateTimeString(),
+            ];
+        });
+
+        return response()->json(['success' => true, 'memes' => $memes]);
+    }
+
+    /**
      * Display public posts of a specific user.
      */
     public function userPosts($userId)
@@ -151,33 +182,64 @@ class MemeController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'type' => 'required|in:meme,gif',
-            'image' => 'required|string', // Base64 encoded image
+            // At least one of image_file or image is required
+            'image_file' => 'nullable|file|image',
+            'image' => 'nullable|string',
             'description' => 'nullable|string|max:1000',
             'is_public' => 'sometimes|boolean',
         ]);
 
+        if (!$request->hasFile('image_file') && !$request->filled('image')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bạn phải chọn hoặc tạo một ảnh để lưu.'
+            ], 422);
+        }
+
         try {
-            // Decode base64 image
-            $imageData = $request->input('image');
-
-            // Remove data:image/...;base64, prefix if exists
-            $mimeType = 'image/png'; // default
-            if (preg_match('/^data:image\/(\w+);base64,/', $imageData, $matches)) {
-                $imageData = substr($imageData, strpos($imageData, ',') + 1);
-                $extension = $matches[1];
-                $mimeType = 'image/' . $extension;
-            }
-
-            // Validate base64 string
-            $decoded = base64_decode($imageData, true);
-            if ($decoded === false) {
+            $mimeType = null;
+            $decoded = null;
+            // Nếu có file upload thì chỉ xử lý file, bỏ qua image base64
+            if ($request->hasFile('image_file')) {
+                $file = $request->file('image_file');
+                $decoded = file_get_contents($file->getRealPath());
+                $mimeType = $file->getMimeType();
+            } else if ($request->filled('image')) {
+                // Fallback: xử lý base64 nếu không có file
+                $imageData = $request->input('image');
+                $mimeType = 'image/png'; // default
+                if (preg_match('/^data:image\/(\w+);base64,/', $imageData, $matches)) {
+                    $imageData = substr($imageData, strpos($imageData, ',') + 1);
+                    $extension = $matches[1];
+                    $mimeType = 'image/' . $extension;
+                }
+                $decoded = base64_decode($imageData, true);
+                if ($decoded === false) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Dữ liệu hình ảnh không hợp lệ (không phải base64).'
+                    ], 422);
+                }
+            } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Dữ liệu hình ảnh không hợp lệ (không phải base64).'
+                    'message' => 'Không có dữ liệu ảnh.'
                 ], 422);
             }
 
-            // Save to database with blob data
+            // Capture canvas JSON if provided (frontend sends 'canvas_json')
+            $canvasJson = null;
+            if ($request->filled('canvas_json')) {
+                $canvasJson = $request->input('canvas_json');
+            }
+
+            // Build metadata/data payload: prefer canvas JSON if present, else store minimal metadata
+            $dataPayload = $canvasJson ?: json_encode([
+                'saved_at' => now()->toDateTimeString(),
+                'settings' => $request->input('settings', [])
+            ]);
+
+            // Save to database with blob data (store exactly the uploaded/converted bytes)
             $meme = Meme::create([
                 'user_id' => Auth::id(),
                 'title' => $request->title,
@@ -186,11 +248,16 @@ class MemeController extends Controller
                 'mime_type' => $mimeType,
                 'description' => $request->description,
                 'is_public' => $request->input('is_public', false),
-                'data' => json_encode([
-                    'saved_at' => now(),
-                    'settings' => $request->input('settings', [])
-                ]),
+                'data' => $dataPayload,
             ]);
+
+            // Log a short hash of the saved image for debugging (doesn't log raw binary)
+            try {
+                $hash = substr(hash('sha256', $decoded), 0, 12);
+                logger()->info('Saved meme image', ['meme_id' => $meme->id, 'mime' => $mimeType, 'hash' => $hash, 'size' => strlen($decoded)]);
+            } catch (\Throwable $t) {
+                // swallow logging errors
+            }
 
             return response()->json([
                 'success' => true,
@@ -224,7 +291,14 @@ class MemeController extends Controller
      */
     public function destroy($id)
     {
-        $meme = Meme::where('user_id', Auth::id())->findOrFail($id);
+        $user = Auth::user();
+        if ($user && isset($user->is_admin) && $user->is_admin) {
+            // admin can delete any meme
+            $meme = Meme::findOrFail($id);
+        } else {
+            // only owner can delete
+            $meme = Meme::where('user_id', Auth::id())->findOrFail($id);
+        }
         $meme->delete();
 
         return redirect()->route('memes.index')->with('status', 'Đã xóa thành công!');
@@ -241,9 +315,27 @@ class MemeController extends Controller
             abort(404);
         }
 
-        return response($meme->image_data)
-            ->header('Content-Type', $meme->mime_type ?? 'image/png')
-            ->header('Cache-Control', 'public, max-age=31536000');
+        // Normalize blob data: some DB drivers return a resource/stream for BLOBs
+        $imageData = $meme->image_data;
+        if (is_resource($imageData)) {
+            // read the entire stream into a string
+            $imageData = stream_get_contents($imageData);
+        }
+
+        // Ensure we have a string for response
+        if (!is_string($imageData)) {
+            // Fallback: try casting
+            $imageData = (string) $imageData;
+        }
+
+        $mime = $meme->mime_type ?? 'image/png';
+        $length = strlen($imageData);
+
+        return response($imageData)
+            ->header('Content-Type', $mime)
+            ->header('Content-Length', $length)
+            ->header('Cache-Control', 'public, max-age=31536000')
+            ->header('Content-Disposition', 'inline; filename="meme-'.$meme->id.'.'.explode('/', $mime)[1].'"');
     }
 }
 

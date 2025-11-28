@@ -28,12 +28,69 @@
     box-sizing: border-box;
 }
 
+/* ========== CUSTOM: Thay đổi nền web (Background GIF) ==========
+   - Bạn đã thêm file GIF "nyanrainbow.gif" vào thư mục public/images/
+   - Mục đích: Sử dụng GIF làm nền chính của web page (trang chủ, dashboard, etc.)
+   - Nếu GIF không tìm thấy, hệ thống sẽ tự động dùng gradient fallback
+   ============================================================ */
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    background-attachment: fixed;
-    min-height: 100vh;
-    color: #333;
+    /* 
+     * Cấu hình nền:
+     * 1. url('/images/nyanrainbow.gif') - Đường dẫn file GIF chính
+     * 2. linear-gradient(...) - Gradient fallback nếu GIF không tải được
+     * 3. center/cover - Căn giữa, thu phóng để phủ toàn bộ màn hình
+     * 4. no-repeat - Không lặp lại hình ảnh
+     * 5. fixed - Nền cố định (không cuộn theo nội dung)
+     */
+    background: url('/images/bg.png') center/cover no-repeat fixed,
+                linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-size: cover;
+    min-height: 100vh;  /* Chiều cao tối thiểu: toàn bộ viewport */
+    color: #333;        /* Màu chữ mặc định */
+    line-height: 1.6;   /* Khoảng cách dòng */
+}
+
+/* ========== CUSTOM: Khung bo góc màu Rainbow cho nội dung ==========
+   - Dùng cho các section: Meme Creator, GIF Creator, Community Gallery
+   - Màu gradient rainbow: đỏ → cam → vàng → xanh lá → xanh dương → tím
+   - Bo góc 20px, padding 20px, backdrop blur effect
+   ================================================================ */
+.rainbow-box {
+    /* Wrapper gradient border: tạo viền rainbow bo góc, bên trong là .rainbow-inner (màu trắng) */
+    border-radius: 22px; /* Border radius cho wrapper */
+    padding: 3px; /* Khoảng để hiển thị viền gradient */
+    background: linear-gradient(135deg,
+        #FF0000 0%, #FF7F00 16.67%, #FFFF00 33.33%,
+        #00FF00 50%, #0000FF 66.67%, #4B0082 83.33%, #9400D3 100%);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+}
+
+/* Nội dung bên trong khung rainbow: nền trắng để giữ 'card body' trắng */
+.rainbow-box .rainbow-inner {
+    background: rgba(34, 33, 33, 0.95); /* Card body giữ màu trắng như yêu cầu */
+    border-radius: 18px; /* Bo góc nhỏ hơn để vừa với viền */
+    padding: 22px 26px; /* Padding bên trong card */
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+}
+
+.rainbow-box .rainbow-inner h1 {
+    margin: 0 0 10px 0;
+    font-size: 2.1rem; /* Tăng kích thước tiêu đề một chút */
+    background: linear-gradient(135deg,
+        #FF0000 0%, #FF7F00 16.67%, #FFFF00 33.33%,
+        #00FF00 50%, #0000FF 66.67%, #4B0082 83.33%, #9400D3 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.rainbow-box .rainbow-inner p {
+    margin: 0;
+    color: white; /* Màu chữ tối để tương phản trên nền trắng */
+    font-size: 1.12rem; /* Tăng kích thước chữ cho các mô tả theo yêu cầu */
     line-height: 1.6;
 }
 
@@ -74,7 +131,7 @@ body::before {
 
 /* Header Styles */
 .header {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(34, 33, 33, 0.95);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-radius: 20px;
@@ -136,6 +193,7 @@ body::before {
 
 .nav-link .nav-text {
     font-size: 0.9rem;
+    color:  black;
 }
 
 .nav-link::before {
@@ -341,6 +399,55 @@ body::before {
     transition: width 0.6s, height 0.6s;
 }
 
+/* Make username text white across all posts */
+.username {
+    color: #ffffff !important;
+}
+
+/* Make post titles white across the site */
+.card h3,
+.post-title,
+.meme-title,
+.title {
+    color: #ffffff !important;
+}
+
+/* Make post description/excerpt text white across the site */
+.card p,
+.post-description,
+.post-desc,
+.description,
+.meme-description,
+.excerpt {
+    color: #ffffff !important;
+}
+
+/* Ensure any H3 used as a post title is white (covers current + future posts) */
+article h3,
+.post h3,
+.post-card h3,
+.meme-card h3,
+.card h3,
+.post-list h3,
+.meme-list h3 {
+    color: #ffffff !important;
+}
+
+/* Links inside titles inherit white color */
+.post h3 a,
+.card h3 a,
+.meme-card h3 a {
+    color: inherit !important;
+    text-decoration: none;
+}
+
+/* Specific selectors for gallery items (titles + descriptions) */
+.gallery-item .item-info h3,
+.gallery-item .item-info .description,
+.gallery-item .item-info p {
+    color: #ffffff !important;
+}
+
 .btn:hover::before {
     width: 300px;
     height: 300px;
@@ -391,6 +498,35 @@ body::before {
 }
 
 /* Animations */
+
+/* ------------------ Title & Description Sizing Overrides ------------------ */
+/* Increase post title sizes by ~30% and reduce description size by ~10% */
+/* Targets common post/title selectors and gallery item info */
+.card h3,
+article h3,
+.post h3,
+.post-card h3,
+.meme-card h3,
+.post-list h3,
+.meme-list h3,
+.gallery-item .item-info h3 {
+    font-size: 1.56rem !important; /* ~30% increase from 1.2rem */
+    line-height: 1.2 !important;
+}
+
+.card p,
+.post-description,
+.post-desc,
+.description,
+.meme-description,
+.excerpt,
+.gallery-item .item-info .description,
+.gallery-item .item-info p {
+    font-size: 0.81rem !important; /* ~10% reduction from 0.9rem */
+    line-height: 1.4 !important;
+}
+
+/* End sizing overrides */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -455,6 +591,7 @@ body::before {
 
     .nav-link .nav-text {
         display: none;
+        color:  black;
     }
 
     .nav-link .nav-icon {

@@ -19,31 +19,37 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 40px;">
                 <!-- Create Meme Card -->
                 <a href="{{ route('home') }}" style="text-decoration: none;">
-                    <div class="card animate-slide-in" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border: 2px solid rgba(102, 126, 234, 0.3); cursor: pointer; animation-delay: 0.1s;">
-                        <div style="font-size: 3rem; margin-bottom: 15px;">🎨</div>
-                        <h3 style="font-size: 1.5rem; font-weight: 700; color: #667eea; margin-bottom: 10px;">Tạo Meme</h3>
-                        <p style="color: #666; margin-bottom: 20px;">Sáng tạo meme độc đáo với công cụ chỉnh sửa mạnh mẽ</p>
-                        <div class="btn btn-primary" style="width: 100%;">Bắt đầu ngay →</div>
+                    <div class="rainbow-box animate-slide-in" style="animation-delay: 0.1s;">
+                        <div class="rainbow-inner" style="border: 2px solid rgba(102, 126, 234, 0.15);">
+                            <div style="font-size: 3rem; margin-bottom: 15px;">🎨</div>
+                            <h3 style="font-size: 1.5rem; font-weight: 700; color: #667eea; margin-bottom: 10px;">Tạo Meme</h3>
+                            <p style="color: #666; margin-bottom: 20px;">Sáng tạo meme độc đáo với công cụ chỉnh sửa mạnh mẽ</p>
+                            <div class="btn btn-primary" style="width: 100%;">Bắt đầu ngay →</div>
+                        </div>
                     </div>
                 </a>
 
                 <!-- Create GIF Card -->
                 <a href="{{ route('gif.creator') }}" style="text-decoration: none;">
-                    <div class="card animate-slide-in" style="background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.1) 100%); border: 2px solid rgba(79, 172, 254, 0.3); cursor: pointer; animation-delay: 0.2s;">
-                        <div style="font-size: 3rem; margin-bottom: 15px;">🎬</div>
-                        <h3 style="font-size: 1.5rem; font-weight: 700; color: #4facfe; margin-bottom: 10px;">Tạo GIF</h3>
-                        <p style="color: #666; margin-bottom: 20px;">Tạo GIF động từ nhiều hình ảnh một cách dễ dàng</p>
-                        <div class="btn btn-success" style="width: 100%;">Tạo GIF →</div>
+                    <div class="rainbow-box animate-slide-in" style="animation-delay: 0.2s;">
+                        <div class="rainbow-inner" style="border: 2px solid rgba(79, 172, 254, 0.15);">
+                            <div style="font-size: 3rem; margin-bottom: 15px;">🎬</div>
+                            <h3 style="font-size: 1.5rem; font-weight: 700; color: #4facfe; margin-bottom: 10px;">Tạo GIF</h3>
+                            <p style="color: #666; margin-bottom: 20px;">Tạo GIF động từ nhiều hình ảnh một cách dễ dàng</p>
+                            <div class="btn btn-success" style="width: 100%;">Tạo GIF →</div>
+                        </div>
                     </div>
                 </a>
 
                 <!-- My Creations Card -->
                 <a href="{{ route('memes.index') }}" style="text-decoration: none;">
-                    <div class="card animate-slide-in" style="background: linear-gradient(135deg, rgba(240, 147, 251, 0.1) 0%, rgba(245, 87, 108, 0.1) 100%); border: 2px solid rgba(240, 147, 251, 0.3); cursor: pointer; animation-delay: 0.3s;">
-                        <div style="font-size: 3rem; margin-bottom: 15px;">🖼️</div>
-                        <h3 style="font-size: 1.5rem; font-weight: 700; color: #f093fb; margin-bottom: 10px;">Tác phẩm của tôi</h3>
-                        <p style="color: #666; margin-bottom: 20px;">Xem và quản lý tất cả các meme & GIF đã tạo</p>
-                        <div class="btn btn-danger" style="width: 100%;">Xem ngay →</div>
+                    <div class="rainbow-box animate-slide-in" style="animation-delay: 0.3s;">
+                        <div class="rainbow-inner" style="border: 2px solid rgba(240, 147, 251, 0.15);">
+                            <div style="font-size: 3rem; margin-bottom: 15px;">🖼️</div>
+                            <h3 style="font-size: 1.5rem; font-weight: 700; color: #f093fb; margin-bottom: 10px;">Tác phẩm của tôi</h3>
+                            <p style="color: #666; margin-bottom: 20px;">Xem và quản lý tất cả các meme & GIF đã tạo</p>
+                            <div class="btn btn-danger" style="width: 100%;">Xem ngay →</div>
+                        </div>
                     </div>
                 </a>
             </div>

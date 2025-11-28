@@ -5,8 +5,8 @@
 @section('content')
 <div class="gif-creator">
     <!-- Header -->
-    <div class="editor-header">
-        <div>
+    <div class="rainbow-box">
+        <div class="rainbow-inner">
             <h1>🎬 GIF Creator</h1>
             <p>Tạo GIF động từ nhiều ảnh một cách dễ dàng! Chỉ cần 3 bước đơn giản.</p>
         </div>
@@ -1277,6 +1277,45 @@ document.getElementById('resetBtn').addEventListener('click', () => {
         gifText.value = '';
         textOptions.style.display = 'none';
         showStep(1);
+    }
+});
+
+
+// Tự động load template nếu có from_template=1 và localStorage chứa ảnh template
+document.addEventListener('DOMContentLoaded', function() {
+    function getQueryParam(name) {
+        const url = new URL(window.location.href);
+        return url.searchParams.get(name);
+    }
+    if (getQueryParam('from_template') === '1') {
+        var imgData = localStorage.getItem('selected_template_image');
+        if (imgData) {
+            setTimeout(function() {
+                var previewCanvas = document.getElementById('previewCanvas');
+                if (previewCanvas) {
+                    var ctx = previewCanvas.getContext('2d');
+                    var img = new window.Image();
+                    img.onload = function() {
+                        ctx.clearRect(0,0,previewCanvas.width,previewCanvas.height);
+                        ctx.drawImage(img, 0, 0, previewCanvas.width, previewCanvas.height);
+                        // Thêm frame đầu tiên là ảnh này
+                        if (typeof frames !== 'undefined' && Array.isArray(frames)) {
+                            frames.length = 0;
+                            frames.push(previewCanvas.toDataURL('image/png'));
+                            updateFrameCount();
+                            framesSection.style.display = '';
+                            framesContainer.innerHTML = '<img src="'+frames[0]+'" style="width:80px;height:80px;border-radius:8px;">';
+                        }
+                    };
+                    img.src = imgData;
+                }
+            }, 600);
+            // Xóa sau khi dùng để tránh lặp lại
+            setTimeout(function(){
+                localStorage.removeItem('selected_template_image');
+                localStorage.removeItem('selected_template_title');
+            }, 2000);
+        }
     }
 });
 
