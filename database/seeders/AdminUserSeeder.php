@@ -13,21 +13,23 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
-        $email = 'admin123@gmail.com';
-        $exists = User::where('email', $email)->first();
+        $email = "admin123@gmail.com";
+        $exists = User::where("email", $email)->first();
         if ($exists) {
-            $exists->update(['is_admin' => true]);
-            $this->command->info("Admin user already exists. Set is_admin=1 for {$email}");
+            $exists->update(["is_admin" => true]);
+            $this->command->info(
+                "Admin user already exists. Set is_admin=1 for {$email}",
+            );
             return;
         }
 
         User::create([
-            'name' => 'Admin',
-            'email' => $email,
-            'password' => Hash::make('12345678'),
-            'is_admin' => true,
+            "name" => "Admin",
+            "email" => $email,
+            "password" => Hash::make("12345678"),
+            "is_admin" => true,
         ]);
 
-        $this->command->info('Admin user created: '.$email);
+        $this->command->info("Admin user created: " . $email);
     }
 }
